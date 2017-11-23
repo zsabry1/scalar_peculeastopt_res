@@ -10,8 +10,6 @@ from scipy.optimize import least_squares
 from scipy.stats import iqr, chi2
 import math
 import matplotlib.pyplot as plt
-import scipy
-
 import sys
 
 class Fit(object):
