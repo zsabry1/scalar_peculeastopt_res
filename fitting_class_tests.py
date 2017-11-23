@@ -3,7 +3,7 @@
 ## Import data reading modules and Fit class
 
 import numpy as np
-from fitting_v11 import Fit
+from fitting_class import Fit
 from scipy.special import beta, betainc ## This is the beta function that we need for our x-ray surface brightness formula
 
 ##################################################
@@ -120,41 +120,42 @@ bds=([1.0,65000,200, 0, 65000, 500],[20,75000,2000, 15, 75000, 500.2])
 '''Call the Fit class and enter the function, initial, boundaries, and xdata arguments. Since our data is one dimensional, there is no need to set ydata = to something'''
 
 d_gauss=Fit(double, init, bds, VEL)
-
+d_gauss.fit_subcluster()
+d_gauss.read_fits()
 
 
 
 ''' We use the view_plot command to look at the data. Since this is one-dimensional data pick the hist option and, if you want, specify the binwidth'''
 
-d_gauss.view_plot()
+#d_gauss.view_plot()
 
 
 
 
 ''' Once you've seen the data, use the populate_bins function to set the binwidth on your data. This function sets y-data equal to the number of observations per bin. It also calculates the error by taking the square root per bin'''
 
-d_gauss.populate_bins(250)
+#d_gauss.populate_bins(250)
 
 
 
 
 ''' We fit using fit_errors again. Since populate_bins already calculated our errors, there is no need to enter the errors as an argument here. Here, we change the iterations to 100 here and we calculate symmetrical errors.'''
 
-d_gauss.fit_errors(iterations=100, mean=True)
+#d_gauss.fit_errors(iterations=100, mean=True)
 
 
 
 
 ''' Call read_fits to read the fitted parameters '''
 
-d_gauss.read_fits()
+#d_gauss.read_fits()
 
 
 
 
 ''' Use plot_fit to plot the fitted parameters. Select either hist, scat, or hist_scat to fit your function it'''
 
-d_gauss.plot_fit()
+#d_gauss.plot_fit()
 
 
 

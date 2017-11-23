@@ -41,12 +41,15 @@ class Fit(object):
         self.residuals= []
         self.chi_square_statistic = []
         self.chi_square_df = []
-#        self.double  = lambda p, x: np.abs(p[0])*np.exp(-0.5*((x-p[1])/p[2])**2)+np.abs(p[3])*np.exp(-0.5*((x-p[4])/p[5])**2)
 #        self.single  = lambda p, x: np.abs(p[0])*np.exp(-0.5*((x-p[1])/p[2])**2)
 #        self.sb = lambda p,r: (p[1]*p[2]*((beta(p[3]-0.5,0.5))/(beta(p[4]-0.5,0.5)))*(r/p[0])**((-2)*p[3]+1))*np.piecewise((r/p[0]),[(r/p[0])**2<1,(r/p[0])**2>=1], [lambda A: 1-betainc(p[4]-0.5,0.5,A**2), lambda A: 0])  + (p[2]*(r/p[0])**((-2)*p[4]+1))*np.piecewise((r/p[0]),[(r/p[0])**2<1,(r/p[0])**2>=1],[lambda A: betainc(p[4]-0.5,0.5,A**2), lambda A: 1])
 
 #        self.chi_square_p = []
     
+
+
+
+
     def first_fit(self):
         """A simple least_squares fit that returns parameters"""
         errfunc = lambda p, x, y: (y - self.fitfunc(p, x))
@@ -56,6 +59,10 @@ class Fit(object):
         self.pfit=pfit.x
 
         return(pfit.x)
+
+
+
+
 
     def fit_errors(self, sigma=[], iterations=1000, mean=False):
         """A bootstrap least_squares fit using standard errors. Can cylce through asymmetric errors 
@@ -151,6 +158,9 @@ class Fit(object):
 
 
 
+
+
+
     def fit_residuals(self, iterations=1000, yerr_systematic=0, mean=False):
         """A bootstrap least_squares fit using residuals as errors. Can cylce through asymmetric errors
         errors using median and 1-3 quartiles and symmetric errors using mean and standard deviation."""
@@ -219,14 +229,27 @@ class Fit(object):
 
         return (pfit_bootstrap, perr_bootstrap)
 
-    #def fit_binomial(self)
-     #   self.fitfunc =
 
 
 
 
 
 
+    def fit_subcluster(self, iterations=1000):
+        self.fitfunc = lambda p, x: np.abs(p[0])*np.exp(-0.5*((x-p[1])/p[2])**2)+np.abs(p[3])*np.exp(-0.5*((x-p[4])/p[5])**2)
+        print("")
+        print(">>> Specify binwidth")
+        print("")
+        
+        try:
+            binw=raw_input('> ')
+        except NameError:
+            binw=input('> ')
+
+        self.populate_bins(int(binw))
+        self.fit_errors() # N**0.5 as errors
+#        self.read_fits()
+#        self.plot_fit()
 
 
 
@@ -257,6 +280,11 @@ class Fit(object):
             print("")
             print("You didn't fit anything!")
         return("")
+
+
+
+
+
 
     def view_plot(self):
         """Look at simple plot of data before plotting fits"""
@@ -342,6 +370,11 @@ class Fit(object):
         
         plt.show()
 
+
+
+
+
+
     def plot_fit(self): ## Keep code running after showing plots
         """Plot fits on a logarithmic plot, scatterplot, histogram, or scatterplot and histogram"""
 
@@ -392,6 +425,12 @@ class Fit(object):
 
         plt.show()
 
+
+
+
+
+
+
     def populate_bins(self, binwidth):
         """Fit any formula to histogram"""
 
@@ -412,6 +451,13 @@ class Fit(object):
         self.datay = data[:,1]
         self.sigma = data[:,1]**0.5
 
+
+
+
+
+
+
+
     def p_spread(self):
         try:
             plt.rcParams["patch.force_edgecolor"] = True
@@ -425,6 +471,12 @@ class Fit(object):
             plt.hist(self.master_list[i])
             plt.title('p'+str(i))
         plt.show()
+
+
+
+
+
+
 
     def reduced_chi_sq(self):
         """Calculates reduced chi_square for any fitted function"""
