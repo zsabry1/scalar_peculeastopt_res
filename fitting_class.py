@@ -543,11 +543,16 @@ class Fit_Xray(Fit_Astro):
         plt.loglog(more_data,surf_bright)
         plt.errorbar(self.datax, self.datay, ls='none', yerr=self.sigma/2) ## yerr= 2*N
         plt.title('Surface Brightness')
+        plt.ylabel('$cts/s/arcsec^-2$')
+        plt.xlabel('Log (arcsec)')
 
         plt.subplot(122)
         plt.loglog(more_data,density)
         plt.errorbar(self.datax, self.y_density, yerr=self.y_density**0.5) ## yerr= 2*N
         plt.title('Electron Density')
+        plt.ylabel('$N_e (cm^-3)$')
+        plt.xlabel('Distance (arcsec)')
+        plt.tight_layout()
 
         plt.show()
 
