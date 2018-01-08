@@ -275,10 +275,3 @@ xrays.fit_xray_density()
 xrays.xray_plots()
 
 
-
-
-
-
-
-
-

@@ -9,7 +9,6 @@ import math
 import matplotlib.pyplot as plt
 import sys
 
-
 class Fit_Astro(object):
     """
     Fit subcluster or any function using either bootstrap residuals or input errors. 
