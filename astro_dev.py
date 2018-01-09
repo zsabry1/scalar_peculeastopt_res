@@ -94,35 +94,48 @@ class PageOne(tk.Frame):
         self.datax = []
         self.datay = []
         tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text='Page One', font=LARGE_FONT)
-        label.grid(row=0, column=0)
+
+        ## Label of page
+        label1 = tk.Label(self, text='Data Visualization', font=LARGE_FONT)
+        label1.grid(row=0, column=1)
 
         ## Navigate Home
         button1 = tk.Button(self, text='Back to Home', command=lambda: controller.show_frame(StartPage))
-        button1.grid(row=1, column=0, sticky='ew')
+        button1.grid(row=1, column=1, sticky='ew')
 
 
         ## Open file
-        button2 = tk.Button(self, text='Browse', command= self.askopenfile)
-        button2.grid(row=2, column=0, sticky='ew')
+        button2 = tk.Button(self, text='Browse Data', command= self.askopenfile)
+        button2.grid(row=2, column=1, sticky='ew')
 
 
-        ## Plot
-        f = Figure()
+        ## Label of data wrangling
+        label2 = tk.Label(self, text='Data Wrangling', font= LARGE_FONT)
+        label2.grid(row=4, column=1, sticky='ew')
+
+
+        ## Spacing on page
+        self.grid_columnconfigure(2, minsize=20)
+        self.grid_columnconfigure(0, minsize=5)
+        self.grid_rowconfigure(3, minsize=20)
+
+        ## Plot setup
+        f = Figure(figsize=(8,5))
         a = f.add_subplot(111)
         a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
 
+
+
+        ## Plotting
         canvas = FigureCanvasTkAgg(f, self)
+        canvas.get_tk_widget().grid(row=1, column=3, rowspan=100, columnspan=100, sticky='NS')
+#        canvas.configure(scrollregion=(-200, -200, 200, 200))
+
+        ## Toolbar
         toolbar = NavigationToolbar2TkAgg(canvas, self)
-#        canvas.show()
-        canvas.get_tk_widget().grid(row=1, column=2, rowspan=1)
+        toolbar.grid(row=0,column=3, sticky='ew')
 
-#        toolbar_frame = tk.Frame()
-        toolbar.grid(row=0,column=2, sticky='ew')
-
-        
 #        toolbar.update()
-#        canvas._tkcanvas.pack()#grid(row=2,column=3, rowspan=6)#(side=tk.TOP, fill=tk.BOTH, expand=True)
 
 
     def askopenfile(self): ## Read all data types
@@ -177,3 +190,12 @@ class PageThree(tk.Frame):
 app = AstroApp()
 app.geometry("800x600")
 app.mainloop()
+
+
+## Possibly useful things------------------------------------------------------------------------------------------------------------------------
+
+## Backgrounds
+## w = tk.Canvas(self, width=200, height=100)
+## w.config(bg='white')
+## w.grid(row=1, column=3, rowspan=90, columnspan=100)
+
