@@ -17,11 +17,32 @@ SMALL_FONT=("Verdana", 8)
 def popupmsg(msg):
     popup = tk.Tk()
     popup.wm_title('!')
-    label = tk.Label(popup, text=msg, font=NORML_FONT)
+    label = ttk.Label(popup, text=msg, font=NORML_FONT)
     label.pack(side='top', fill='x', pady=10)
-    B1 = tk.Button(popup, text='Okay', command=popup.destroy)
+    B1 = ttk.Button(popup, text='Okay', command=popup.destroy)
     B1.pack()
     popup.mainloop()
+
+def askopenfile(): ## Read all data types
+    file_name=tk.filedialog.askopenfilename(initialdir = '/Desktop', title="Select data file", filetypes=(("dat files", "*.dat"), ("text files", "*.txt"), ("csv files", "*.csv"), ("all files", "*.*")))
+    data=np.loadtxt(str(file_name), skiprows=0)
+    try:
+        numcols=len(data[0])
+    except IndexError:
+        popupmsg("The data file is empty")
+            
+
+    ## Display number of colums
+#    label3 = ttk.Label(self, text=str(numcols), font=NORML_FONT)
+#    label3.grid(row=5, column=2)
+
+#    ## Modifying file name to display and not be too long
+#    abb_file = file_name.rsplit('/',1)[1] # split after last /
+#    info = (abb_file[:20] + '...') if len(abb_file) > 20 else abb_file # if str > 25 characters, ellipsis
+
+#    ## Label of opened file
+#    filelabel= ttk.Label(self, text=info, font=SMALL_FONT)
+#    filelabel.grid(row=3, column=1, sticky='ew')
 
 #def getContent(data):
 #    datax = [x[int(ent1.get())] for x in data]
@@ -208,22 +229,26 @@ class PageOne(tk.Frame):
 #        toolbar.update()
 
 
-    def askopenfile(self): ## Read all data types
-            file_name=tk.filedialog.askopenfilename(initialdir = '/Desktop', title="Select data file", filetypes=(("dat files", "*.dat"), ("text files", "*.txt"), ("csv files", "*.csv"), ("all files", "*.*")))
-            self.data=np.loadtxt(str(file_name), skiprows=0)
-            numcols=len(self.data[0])
+#    def askopenfile(self): ## Read all data types
+#        file_name=tk.filedialog.askopenfilename(initialdir = '/Desktop', title="Select data file", filetypes=(("dat files", "*.dat"), ("text files", "*.txt"), ("csv files", "*.csv"), ("all files", "*.*")))
+#        self.data=np.loadtxt(str(file_name), skiprows=0)
+#        try:
+#            numcols=len(self.data[0])
+#        except IndexError:
+#            popupmsg("The data file is empty")
+            
 
-            ## Display number of colums
-            label3 = ttk.Label(self, text=str(numcols), font=NORML_FONT)
-            label3.grid(row=5, column=2)
+#        ## Display number of colums
+#        label3 = ttk.Label(self, text=str(numcols), font=NORML_FONT)
+#        label3.grid(row=5, column=2)
 
-            ## Modifying file name to display and not be too long
-            abb_file = file_name.rsplit('/',1)[1] # split after last /
-            info = (abb_file[:20] + '...') if len(abb_file) > 20 else abb_file # if str > 25 characters, ellipsis
+#        ## Modifying file name to display and not be too long
+#        abb_file = file_name.rsplit('/',1)[1] # split after last /
+#        info = (abb_file[:20] + '...') if len(abb_file) > 20 else abb_file # if str > 25 characters, ellipsis
 
-            ## Label of opened file
-            filelabel= ttk.Label(self, text=info, font=SMALL_FONT)
-            filelabel.grid(row=3, column=1, sticky='ew')
+#        ## Label of opened file
+#        filelabel= ttk.Label(self, text=info, font=SMALL_FONT)
+#        filelabel.grid(row=3, column=1, sticky='ew')
 
 
     def getContent(self):
