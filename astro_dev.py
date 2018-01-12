@@ -2,6 +2,8 @@ import matplotlib
 matplotlib.use("TkAgg")
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
 from matplotlib.figure import Figure
+import matplotlib.animation as animation
+from matplotlib import style
 from matplotlib import pyplot as plt
 import numpy as np
 
@@ -12,7 +14,11 @@ import tkinter.font as tkfont
 LARGE_FONT=("Verdana", 12) ## Font specs
 NORML_FONT=("Verdana", 10)
 SMALL_FONT=("Verdana", 8)
+style.use('ggplot')
 
+
+## Figures
+f = Figure(figsize=(8,5))
 
 def popupmsg(msg):
     popup = tk.Tk()
@@ -23,36 +29,9 @@ def popupmsg(msg):
     B1.pack()
     popup.mainloop()
 
-def askopenfile(): ## Read all data types
-    file_name=tk.filedialog.askopenfilename(initialdir = '/Desktop', title="Select data file", filetypes=(("dat files", "*.dat"), ("text files", "*.txt"), ("csv files", "*.csv"), ("all files", "*.*")))
-    data=np.loadtxt(str(file_name), skiprows=0)
-    try:
-        numcols=len(data[0])
-    except IndexError:
-        popupmsg("The data file is empty")
-            
+def printer(thing):
+    print(thing)
 
-    ## Display number of colums
-#    label3 = ttk.Label(self, text=str(numcols), font=NORML_FONT)
-#    label3.grid(row=5, column=2)
-
-#    ## Modifying file name to display and not be too long
-#    abb_file = file_name.rsplit('/',1)[1] # split after last /
-#    info = (abb_file[:20] + '...') if len(abb_file) > 20 else abb_file # if str > 25 characters, ellipsis
-
-#    ## Label of opened file
-#    filelabel= ttk.Label(self, text=info, font=SMALL_FONT)
-#    filelabel.grid(row=3, column=1, sticky='ew')
-
-#def getContent(data):
-#    datax = [x[int(ent1.get())] for x in data]
-#    datay = [y[int(ent2.get())] for y in data]
-#    datax_err = [x_err[int(ent3.get())] for x_err in data]
-#    datay_err = [y_err[int(ent4.get())] for y_err in data]
-#    print(datax[0])
-#    print(datay[0])
-#    print(datax_err[0])
-#    print(datay_err[0])
 
 class AstroApp(tk.Tk):
     def __init__(self, *args, **kwargs): ##kwargs, passing through dictionaries
@@ -91,7 +70,6 @@ class AstroApp(tk.Tk):
 
 
     def show_frame(self, cont):
-    
         frame = self.frames[cont] #cont is key, thrown into show_frame. self inherits
         frame.tkraise()    ## raise to the front
 
@@ -138,6 +116,8 @@ class PageOne(tk.Frame):
         self.ent2=[]
         self.ent3=[]
         self.ent4=[]
+        self.ent5=[]
+        self.combo=[]
         tk.Frame.__init__(self, parent)
 
         ## Label of page
@@ -152,10 +132,12 @@ class PageOne(tk.Frame):
         ## Open file
         button2 = ttk.Button(self, text='Browse Data', command= self.askopenfile)
         button2.grid(row=2, column=1, columnspan=2, sticky='ew')
+        button2 = ttk.Button(self, text='Browse Data', command= self.askopenfile)
+        button2.grid(row=2, column=1, columnspan=2, sticky='ew')
 
         ## Set data button
         button3 = ttk.Button(self, text='Set Data', command= self.getContent)
-        button3.grid(row=10, column=1)
+        button3.grid(row=10, column=1, sticky='sw')
 
 
         ## Label of data wrangling
@@ -192,74 +174,226 @@ class PageOne(tk.Frame):
         self.ent4 = ttk.Entry(self, width=3)
         self.ent4.grid(row=9, column=2)
 
-
-#        self.usertext = tk.StringVar()
-#        self.myentry = ttk.Entry(self,textvariable=self.usertest)
-#        self.myentry.grid(row=6, column=2)
-#        entry = ttk.Entry()
-#        entry.grid(row=6, column=2)
-
-
-
         ## Spacing on page
         self.grid_columnconfigure(3, minsize=20)
         self.grid_columnconfigure(0, minsize=5)
         self.grid_columnconfigure(2, minsize=20)
         self.grid_rowconfigure(3, minsize=20)
         self.grid_rowconfigure(4, minsize=40)
+        self.grid_rowconfigure(101, minsize=20)
+        self.grid_rowconfigure(10, minsize=20)
+#        self.grid_columnconfigure(6, minsize=700)
 
-        ## Backgrounds
-#        w = tk.Canvas(self, width=10, height=10)
-#        w.config(bg='white')
-#        w.grid(row=5, column=2)
-        
+        ## Dropdown box label
+        label8 = ttk.Label(self, text='Plot type: ', font= NORML_FONT)
+        label8.grid(row=101, column=4, sticky='SW')
+
+        ## Plot dropdown box
+        self.combo = ttk.Combobox(self)
+        self.combo['values'] = ('Linear','Scatterplot', 'Histogram', 'Logarithmic')#, 'Semilogx', 'Semilogy')
+        self.combo.current(0)
+        self.combo.grid(row=101, column=5, sticky='SW')
 
         ## Plot setup
-        f = Figure(figsize=(8,5))
         a = f.add_subplot(111)
-        a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
 
         ## Plotting
         canvas = FigureCanvasTkAgg(f, self)
-        canvas.get_tk_widget().grid(row=1, column=4, rowspan=100, columnspan=100, sticky='NS')
+        canvas.get_tk_widget().grid(row=1, column=4, rowspan=100, columnspan=50, sticky='NS')
+        canvas.show()
 
         ## Toolbar
         toolbar = NavigationToolbar2TkAgg(canvas, self)
-        toolbar.grid(row=0,column=4, sticky='ew')
-#        toolbar.update()
+        toolbar.grid(row=0,column=4, columnspan=100, sticky='ew')
+        #toolbar.update()
+
+        ## Set plot button
+        button4 = ttk.Button(self, text='Set Plot', command = lambda: self.getResponse(canvas,a))
+        button4.grid(row=102, column=4, sticky='sw')
 
 
-#    def askopenfile(self): ## Read all data types
-#        file_name=tk.filedialog.askopenfilename(initialdir = '/Desktop', title="Select data file", filetypes=(("dat files", "*.dat"), ("text files", "*.txt"), ("csv files", "*.csv"), ("all files", "*.*")))
-#        self.data=np.loadtxt(str(file_name), skiprows=0)
-#        try:
-#            numcols=len(self.data[0])
-#        except IndexError:
-#            popupmsg("The data file is empty")
+    def askopenfile(self): ## Read all data types
+        file_name=tk.filedialog.askopenfilename(initialdir = '/Desktop', title="Select data file", filetypes=(("dat files", "*.dat"), ("text files", "*.txt"), ("csv files", "*.csv"), ("all files", "*.*")))
+        self.data=np.loadtxt(str(file_name), skiprows=0)
+        try:
+            numcols=len(self.data[0])
+        except IndexError:
+            popupmsg("The data file is empty")
             
+        ## Display number of colums
+        label3 = ttk.Label(self, text=str(numcols), font=NORML_FONT)
+        label3.grid(row=5, column=2)
 
-#        ## Display number of colums
-#        label3 = ttk.Label(self, text=str(numcols), font=NORML_FONT)
-#        label3.grid(row=5, column=2)
+        ## Modifying file name to display and not be too long
+        abb_file = file_name.rsplit('/',1)[1] # split after last /
+        info = (abb_file[:20] + '...') if len(abb_file) > 20 else abb_file # if str > 25 characters, ellipsis
 
-#        ## Modifying file name to display and not be too long
-#        abb_file = file_name.rsplit('/',1)[1] # split after last /
-#        info = (abb_file[:20] + '...') if len(abb_file) > 20 else abb_file # if str > 25 characters, ellipsis
-
-#        ## Label of opened file
-#        filelabel= ttk.Label(self, text=info, font=SMALL_FONT)
-#        filelabel.grid(row=3, column=1, sticky='ew')
+        ## Label of opened file
+        filelabel= ttk.Label(self, text=info, font=SMALL_FONT)
+        filelabel.grid(row=3, column=1, sticky='ew')
 
 
     def getContent(self):
+        self.datax = []
+        self.datay = []
+        self.datax_err = []
+        self.datay_err = []
+
+        try:
             self.datax = [x[int(self.ent1.get())-1] for x in self.data]
+        except ValueError:
+            popupmsg("At least x-data must be entered")
+        except IndexError:
+            popupmsg("Invalid column number for x-data")
+        
+        try:
             self.datay = [y[int(self.ent2.get())-1] for y in self.data]
+        except ValueError:
+            pass
+        except IndexError:
+            popupmsg("Invalid column number for y-data")
+
+        try:
             self.datax_err = [x_err[int(self.ent3.get())-1] for x_err in self.data]
+        except ValueError:
+            pass
+        except IndexError:
+            popupmsg("Invalid column number for x-error data")
+
+        try:
             self.datay_err = [y_err[int(self.ent4.get())-1] for y_err in self.data]
-            print(self.datax[0])
-            print(self.datay[0])
-            print(self.datax_err[0])
-            print(self.datay_err[0])
+        except ValueError:
+            pass
+        except IndexError:
+            popupmsg("Invalid column number for y-error data")
+
+    def getResponse(self, canvas, a):
+        a.clear()
+        if len(self.data) == 0:
+            popupmsg('Must set data first')
+
+        if self.combo.get() == 'Linear' and len(self.datax_err) == 0 and len(self.datay_err) == 0:
+            try:
+                a.plot(self.datax, self.datay)
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Linear' and len(self.datax_err) != 0 and len(self.datay_err) == 0:
+            try:
+                a.errorbar(self.datax, self.datay, xerr=self.datax_err)
+                a.plot(self.datax, self.datay)
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Linear' and len(self.datax_err) == 0 and len(self.datay_err) != 0:
+            try:
+                a.errorbar(self.datax, self.datay, yerr=self.datay_err)
+                a.plot(self.datax, self.datay)
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Linear' and len(self.datax_err) != 0 and len(self.datay_err) != 0:
+            try:
+                a.errorbar(self.datax, self.datay, xerr=self.datax_err, yerr=self.datay_err)
+                a.plot(self.datax, self.datay)
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Scatterplot' and len(self.datax_err) == 0 and len(self.datay_err) == 0:
+            try:
+                a.plot(self.datax, self.datay, 'o')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Scatterplot' and len(self.datax_err) != 0 and len(self.datay_err) == 0:
+            try:
+                a.errorbar(self.datax, self.datay, xerr=self.datax_err, ls='none')
+                a.plot(self.datax, self.datay, 'o')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Scatterplot' and len(self.datax_err) == 0 and len(self.datay_err) != 0:
+            try:
+                a.errorbar(self.datax, self.datay, yerr=self.datay_err, ls='none')
+                a.plot(self.datax, self.datay, 'o')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Scatterplot' and len(self.datax_err) != 0 and len(self.datay_err) != 0:
+            try:
+                a.errorbar(self.datax, self.datay, xerr=self.datax_err, yerr=self.datay_err, ls='none')
+                a.plot(self.datax, self.datay, 'o')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+
+        if self.combo.get() == 'Logarithmic' and len(self.datax_err) == 0 and len(self.datay_err) == 0:
+            try:
+                a.loglog(self.datax, self.datay, 'o')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Logarithmic' and len(self.datax_err) != 0 and len(self.datay_err) == 0:
+            try:
+                a.loglog(self.datax, self.datay, 'o')
+                a.errorbar(self.datax, self.datay, xerr=self.datax_err, ls='none')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Logarithmic' and len(self.datax_err) == 0 and len(self.datay_err) != 0:
+            try:
+                a.loglog(self.datax, self.datay, 'o')
+                a.errorbar(self.datax, self.datay, yerr=self.datay_err, ls='none')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Logarithmic' and len(self.datax_err) != 0 and len(self.datay_err) != 0:
+            try:
+                a.loglog(self.datax, self.datay, 'o')
+                a.errorbar(self.datax, self.datay, xerr=self.datax_err, yerr=self.datay_err, ls='none')
+                canvas.draw()
+            except ValueError:
+                popupmsg('Must enter y-data')
+
+        if self.combo.get() == 'Histogram':
+            ## Set data button
+            button4 = ttk.Button(self, text='Set binwidth')#, command= self.getContent)
+            button4.grid(row=103, column=6, sticky='sw')
+
+            self.ent5 = ttk.Entry(self, width=9)
+            self.ent5.grid(row=103, column=5, sticky='sw')
+
+            ## Label of data wrangling
+            label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
+            label9.grid(row=103, column=4, sticky='SW')
+
+#            print('Common')
+#            a = f.add_subplot(111)
+#            a.clear()
+#            a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
+#            plt.show()
+
+#    def getPlot_Linear(self):
+        
+#        datax = [x[int(ent1.get())] for x in data]
+#        datay = [y[int(ent2.get())] for y in data]
+#        datax_err = [x_err[int(ent3.get())] for x_err in data]
+#        datay_err = [y_err[int(ent4.get())] for y_err in data]
+#        print(datax[0])
+#        print(datay[0])
+#        print(datax_err[0])
+#        print(datay_err[0])
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -302,7 +436,8 @@ class PageThree(tk.Frame):
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
 app = AstroApp()
-app.geometry("800x600")
+#ani = animation.FuncAnimation(f, self.getResponses)
+#app.geometry("800x600")
 app.mainloop()
 
 
