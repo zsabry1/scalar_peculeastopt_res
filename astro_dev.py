@@ -116,7 +116,7 @@ class PageOne(tk.Frame):
         self.ent2=[]
         self.ent3=[]
         self.ent4=[]
-        self.ent5=[]
+        self.binwidth=[]
         self.combo=[]
         tk.Frame.__init__(self, parent)
 
@@ -178,15 +178,21 @@ class PageOne(tk.Frame):
         self.grid_columnconfigure(3, minsize=20)
         self.grid_columnconfigure(0, minsize=5)
         self.grid_columnconfigure(2, minsize=20)
+        self.grid_columnconfigure(4, minsize=110)
         self.grid_rowconfigure(3, minsize=20)
         self.grid_rowconfigure(4, minsize=40)
         self.grid_rowconfigure(101, minsize=20)
         self.grid_rowconfigure(10, minsize=20)
+        self.grid_rowconfigure(103, minsize=20)
 #        self.grid_columnconfigure(6, minsize=700)
 
         ## Dropdown box label
         label8 = ttk.Label(self, text='Plot type: ', font= NORML_FONT)
         label8.grid(row=101, column=4, sticky='SW')
+
+        ## getResponse buttons
+        button5 = ttk.Button(self, text='Set binwidth')#, command= self.getContent)
+        label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
 
         ## Plot dropdown box
         self.combo = ttk.Combobox(self)
@@ -267,10 +273,34 @@ class PageOne(tk.Frame):
         except IndexError:
             popupmsg("Invalid column number for y-error data")
 
+#    def plot_histogram(self):
+#        if len(self.binwidth) == 0:
+#            fsdfsdf
+#        else:
+            
+        
+
     def getResponse(self, canvas, a):
         a.clear()
+
+        global button5, label9
         if len(self.data) == 0:
             popupmsg('Must set data first')
+
+        if self.combo.get() == 'Histogram':
+            ## Set data button placement
+            button5.grid(row=104, column=4, sticky='sw')
+
+            self.binwidth = ttk.Entry(self, width=9)
+            self.binwidth.grid(row=103, column=5, sticky='sw')
+
+            ## Label of data wrangling placement
+            label9.grid(row=103, column=4, sticky='SW')
+
+        if self.combo.get() != 'Histogram':
+            button5.grid_forget()
+            label9.grid_forget()
+            self.binwidth.grid_forget()
 
         if self.combo.get() == 'Linear' and len(self.datax_err) == 0 and len(self.datay_err) == 0:
             try:
@@ -366,23 +396,6 @@ class PageOne(tk.Frame):
             except ValueError:
                 popupmsg('Must enter y-data')
 
-        if self.combo.get() == 'Histogram':
-            ## Set data button
-            button4 = ttk.Button(self, text='Set binwidth')#, command= self.getContent)
-            button4.grid(row=103, column=6, sticky='sw')
-
-            self.ent5 = ttk.Entry(self, width=9)
-            self.ent5.grid(row=103, column=5, sticky='sw')
-
-            ## Label of data wrangling
-            label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
-            label9.grid(row=103, column=4, sticky='SW')
-
-#            print('Common')
-#            a = f.add_subplot(111)
-#            a.clear()
-#            a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
-#            plt.show()
 
 #    def getPlot_Linear(self):
         
