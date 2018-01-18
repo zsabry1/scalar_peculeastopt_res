@@ -6,6 +6,7 @@ import matplotlib.animation as animation
 from matplotlib import style
 from matplotlib import pyplot as plt
 import numpy as np
+import math
 
 import tkinter as tk
 from tkinter import ttk
@@ -19,6 +20,8 @@ style.use('ggplot')
 
 ## Figures
 f = Figure(figsize=(8,5))
+g = Figure(figsize=(6,6))
+h = Figure(figsize=(4,2))
 
 def popupmsg(msg):
     popup = tk.Tk()
@@ -93,7 +96,7 @@ class StartPage(tk.Frame): ## inherit all the stuff from the frame
         button1 = ttk.Button(self, text='Data Visualization', command=lambda: controller.show_frame(PageOne)) ## text on button, command = function
         button1.pack()
 
-        button2 = ttk.Button(self, text='Visit Page 2', command=lambda: controller.show_frame(PageTwo))
+        button2 = ttk.Button(self, text='Sky Coordinates', command=lambda: controller.show_frame(PageTwo))
         button2.pack()
 
         button3 = ttk.Button(self, text='Graph Page', command=lambda: controller.show_frame(PageThree))
@@ -118,6 +121,11 @@ class PageOne(tk.Frame):
         self.ent4=[]
         self.binwidth=[]
         self.combo=[]
+        self.bins = []
+        self.datax_bins = []
+        self.datay_hist = []
+        self.datay = []
+        self.sigma = []
         tk.Frame.__init__(self, parent)
 
         ## Label of page
@@ -125,14 +133,12 @@ class PageOne(tk.Frame):
         label1.grid(row=0, column=1, columnspan=2)
 
         ## Navigate Home
-        button1 = ttk.Button(self, text='Back to Home', command=lambda: controller.show_frame(StartPage))
+        button1 = ttk.Button(self, text='Back to Home', command = lambda: controller.show_frame(StartPage))
         button1.grid(row=1, column=1, columnspan=2, sticky='ew')
 
 
         ## Open file
-        button2 = ttk.Button(self, text='Browse Data', command= self.askopenfile)
-        button2.grid(row=2, column=1, columnspan=2, sticky='ew')
-        button2 = ttk.Button(self, text='Browse Data', command= self.askopenfile)
+        button2 = ttk.Button(self, text='Browse Data', command= lambda: self.askopenfile(5,2,3,1))
         button2.grid(row=2, column=1, columnspan=2, sticky='ew')
 
         ## Set data button
@@ -190,10 +196,6 @@ class PageOne(tk.Frame):
         label8 = ttk.Label(self, text='Plot type: ', font= NORML_FONT)
         label8.grid(row=101, column=4, sticky='SW')
 
-        ## getResponse buttons
-        button5 = ttk.Button(self, text='Set binwidth')#, command= self.getContent)
-        label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
-
         ## Plot dropdown box
         self.combo = ttk.Combobox(self)
         self.combo['values'] = ('Linear','Scatterplot', 'Histogram', 'Logarithmic')#, 'Semilogx', 'Semilogy')
@@ -208,19 +210,26 @@ class PageOne(tk.Frame):
         canvas.get_tk_widget().grid(row=1, column=4, rowspan=100, columnspan=50, sticky='NS')
         canvas.show()
 
+        ## getResponse buttons
+        button5 = ttk.Button(self, text='Set binwidth', command = lambda: self.populate_bins(canvas, a))
+        label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
+
         ## Toolbar
         toolbar = NavigationToolbar2TkAgg(canvas, self)
         toolbar.grid(row=0,column=4, columnspan=100, sticky='ew')
         #toolbar.update()
 
         ## Set plot button
-        button4 = ttk.Button(self, text='Set Plot', command = lambda: self.getResponse(canvas,a))
+        button4 = ttk.Button(self, text='Set Plot', command = lambda: self.getResponse(canvas, a, button5, label9))
         button4.grid(row=102, column=4, sticky='sw')
 
 
-    def askopenfile(self): ## Read all data types
+    def askopenfile(self, x1, y1, x2, y2): ## Read all data types
         file_name=tk.filedialog.askopenfilename(initialdir = '/Desktop', title="Select data file", filetypes=(("dat files", "*.dat"), ("text files", "*.txt"), ("csv files", "*.csv"), ("all files", "*.*")))
-        self.data=np.loadtxt(str(file_name), skiprows=0)
+        try:
+            self.data=np.loadtxt(str(file_name), skiprows=0)
+        except FileNotFoundError:
+            return
         try:
             numcols=len(self.data[0])
         except IndexError:
@@ -228,7 +237,7 @@ class PageOne(tk.Frame):
             
         ## Display number of colums
         label3 = ttk.Label(self, text=str(numcols), font=NORML_FONT)
-        label3.grid(row=5, column=2)
+        label3.grid(row=x1, column=y1)
 
         ## Modifying file name to display and not be too long
         abb_file = file_name.rsplit('/',1)[1] # split after last /
@@ -236,7 +245,7 @@ class PageOne(tk.Frame):
 
         ## Label of opened file
         filelabel= ttk.Label(self, text=info, font=SMALL_FONT)
-        filelabel.grid(row=3, column=1, sticky='ew')
+        filelabel.grid(row=x2, column=y2, sticky='ew')
 
 
     def getContent(self):
@@ -273,34 +282,34 @@ class PageOne(tk.Frame):
         except IndexError:
             popupmsg("Invalid column number for y-error data")
 
-#    def plot_histogram(self):
-#        if len(self.binwidth) == 0:
-#            fsdfsdf
-#        else:
-            
-        
 
-    def getResponse(self, canvas, a):
+    def getResponse(self, canvas, a, button5, label9):
         a.clear()
 
-        global button5, label9
         if len(self.data) == 0:
             popupmsg('Must set data first')
 
         if self.combo.get() == 'Histogram':
-            ## Set data button placement
-            button5.grid(row=104, column=4, sticky='sw')
-
             self.binwidth = ttk.Entry(self, width=9)
             self.binwidth.grid(row=103, column=5, sticky='sw')
+
+            ## Set data button placement
+            button5.grid(row=104, column=4, sticky='sw')
 
             ## Label of data wrangling placement
             label9.grid(row=103, column=4, sticky='SW')
 
-        if self.combo.get() != 'Histogram':
-            button5.grid_forget()
-            label9.grid_forget()
-            self.binwidth.grid_forget()
+            ## Plotting histogram
+            a.hist(self.datax, color='blue')
+            canvas.draw()
+
+        else:
+            try:
+                button5.grid_forget()
+                label9.grid_forget()
+                self.binwidth.grid_forget()
+            except AttributeError:
+                pass
 
         if self.combo.get() == 'Linear' and len(self.datax_err) == 0 and len(self.datay_err) == 0:
             try:
@@ -397,28 +406,203 @@ class PageOne(tk.Frame):
                 popupmsg('Must enter y-data')
 
 
-#    def getPlot_Linear(self):
+    def populate_bins(self, canvas, a):
+        a.clear()        
+
+        if len(self.datax) != 0:
+            ## Number of bins
+            binN=math.ceil((np.max(self.datax)-np.min(self.datax))/float(self.binwidth.get()))
+
+            ## Preparing historgram
+            y,x=np.histogram(self.datax,int(binN))
+            x=(x[1:]+x[:-1])/2 # for len(x)==len(y)
+            data=np.vstack((x,y)).T
         
-#        datax = [x[int(ent1.get())] for x in data]
-#        datay = [y[int(ent2.get())] for y in data]
-#        datax_err = [x_err[int(ent3.get())] for x_err in data]
-#        datay_err = [y_err[int(ent4.get())] for y_err in data]
-#        print(datax[0])
-#        print(datay[0])
-#        print(datax_err[0])
-#        print(datay_err[0])
+        ## Bins and their respective populations
+            self.bins = binN
+            self.datax_bins = data[:,0]
+            self.datay_hist = data[:,1]
+            self.sigma = data[:,1]**0.5
+
+#            binN=math.ceil((np.max(self.datax)-np.min(self.datax))/float(binwidth))
+            a.hist(self.datax, bins=int(binN))
+            canvas.draw()
+        else:
+            pass
+        
+        ## BINWIDTH SET TO ###
+
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
 class PageTwo(PageOne):
     def __init__(self,parent,controller):
-        tk.Frame.__init__(self, parent)
-        label = tk.Label(self, text='Page Two', font=LARGE_FONT)
-        label.pack(pady=10, padx=10)
+        self.RA = []
+        self.DEC = []
+        self.redshift = []
+        self.H0 = []
+        self.z_mean = []
+        self.wm = []
+        self.wv = []
+        self.RA_ent=[]
+        self.DEC_ent=[]
+        self.REDSHIFT_ent=[]
+        self.mini_binwidth=[]
+        self.upper = []
+        self.lower = []
 
-        ## Navigate to home
-        button1 = tk.Button(self, text='Back to Home', command=lambda: controller.show_frame(StartPage))
-        button1.pack()
+        tk.Frame.__init__(self, parent)
+        label10 = tk.Label(self, text='Sky Coordinates', font=LARGE_FONT)
+        label10.grid(row=0, column=1, columnspan=2)
+
+        ## Navigate Home
+        button10 = ttk.Button(self, text='Back to Home', command = lambda: controller.show_frame(StartPage))
+        button10.grid(row=1, column=1, columnspan=2, sticky='ew')
+
+        ## Open file
+        button11 = ttk.Button(self, text='Browse Data', command = lambda: self.askopenfile(6,2,3,1))
+        button11.grid(row=2, column=1, columnspan=2, sticky='ew')
+
+        ## Label of data wrangling
+        label11 = ttk.Label(self, text='Data Wrangling', font= LARGE_FONT)
+        label11.grid(row=5, column=1, columnspan=2, sticky='SW')
+
+        ## Number of columns
+        label12 = ttk.Label(self, text='Number of columns = ', font= NORML_FONT)
+        label12.grid(row=6, column=1, sticky='ew')
+
+        ## Data variables labels
+        label13 = ttk.Label(self, text='RA column #', font= NORML_FONT)
+        label13.grid(row=7, column=1, sticky='w')
+
+        label14 = ttk.Label(self, text='DEC column #', font= NORML_FONT)
+        label14.grid(row=8, column=1, sticky='w')
+
+        label15 = ttk.Label(self, text='REDSHIFT column #', font= NORML_FONT)
+        label15.grid(row=9, column=1, sticky='ew')
+
+        ## Data variables entries
+        self.RA_ent = ttk.Entry(self, width=3)
+        self.RA_ent.grid(row=7, column=2)
+
+        self.DEC_ent = ttk.Entry(self, width=3)
+        self.DEC_ent.grid(row=8, column=2)
+
+        self.REDSHIFT_ent = ttk.Entry(self, width=3)
+        self.REDSHIFT_ent.grid(row=9, column=2)
+
+        ## Set data button
+        button12 = ttk.Button(self, text='Set Data', command= self.getContent)
+        button12.grid(row=11, column=1, sticky='sw')
+
+
+        ## Cosmology
+        label16 = ttk.Label(self, text='Cosmology', font=LARGE_FONT)
+        label16.grid(row=13, column=1, sticky='sw')
+
+        label17 = ttk.Label(self, text=u'H\u2080', font=NORML_FONT)
+        label17.grid(row=14, column=2, sticky='sw')
+
+        label18 = ttk.Label(self, text=u'\u03A9m', font=NORML_FONT) # u'\u03a9'
+        label18.grid(row=15, column=2, sticky='sw')
+
+        label19 = ttk.Label(self, text='z', font=NORML_FONT)
+        label19.grid(row=16, column=2, sticky='sw')
+
+        label20 = ttk.Label(self, text=u'\u03A9\u03BB', font=NORML_FONT)
+        label20.grid(row=17, column=2, sticky='sw')
+
+        ## Data variables entries
+        self.H0 = ttk.Entry(self, width=15)
+        self.H0.insert(0, '70')
+        self.H0.grid(row=14, column=1, sticky='w')
+
+        self.wm = ttk.Entry(self, width=15)
+        self.wm.insert(0, '0.3')
+        self.wm.grid(row=15, column=1, sticky='w')
+
+        self.z_mean = ttk.Entry(self, width=15)
+        self.z_mean.grid(row=16, column=1, sticky='w')
+
+        self.wv = ttk.Entry(self, width=15)
+        self.wv.insert(0, '0.7')
+        self.wv.grid(row=17, column=1, sticky='w')
+
+        ## Set cosmology button
+        button13 = ttk.Button(self, text='Set Cosmology')#, command= self.cosmo)
+        button13.grid(row=19, column=1, sticky='sw')
+
+
+        ## Type of plot
+        main_plot = g.add_subplot(111)
+        hist_plot = h.add_subplot(111)
+
+        ## Plotting canvas main
+        canvas_main = FigureCanvasTkAgg(g, self)
+        canvas_main.get_tk_widget().grid(row=1, column=4, rowspan=100, columnspan=10, sticky='NS')
+        canvas_main.show()
+
+        ## Toolbar canvas main
+        toolbar = NavigationToolbar2TkAgg(canvas_main, self)
+        toolbar.grid(row=0,column=4, columnspan=10, sticky='ew')
+        #toolbar.update()
+
+        ## Plotting canvas hist
+        canvas_hist = FigureCanvasTkAgg(h, self)
+        canvas_hist.get_tk_widget().grid(row=5, column=16, rowspan=50, columnspan=10, sticky='NS')
+        canvas_hist.show()
+
+        ## Histogram labels
+        ## Binwidth
+        label21 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
+        label21.grid(row=67, column=16, sticky='ew')
+
+        self.mini_binwidth = ttk.Entry(self, width=6)
+        self.mini_binwidth.grid(row=67, column=18, columnspan=2, sticky='ew')
+
+        ## Set binwidth button
+        button14 = ttk.Button(self, text='Set binwidth')#, command= self.cosmo)
+        button14.grid(row=68, column=16, sticky='ew')
+
+        ## Boundaries labels
+        label22 = ttk.Label(self, text='Boundaries:', font= NORML_FONT)
+        label22.grid(row=70, column=16, sticky='ew')
+
+        ## Set crop button
+        button15 = ttk.Button(self, text='Crop to bounds')#, command= self.cosmo)
+        button15.grid(row=71, column=16, sticky='ew')
+
+        ## Boundaries labels
+        label23 = ttk.Label(self, text='Upper', font= NORML_FONT)
+        label23.grid(row=70, column=18, sticky='w')
+
+        ## Boundaries labels
+        label24 = ttk.Label(self, text='Lower', font= NORML_FONT)
+        label24.grid(row=71, column=18, sticky='w')
+
+        ## Boundaries entry boxes
+        self.upper = ttk.Entry(self, width=6)
+        self.upper.grid(row=70, column=19)
+
+        self.lower = ttk.Entry(self, width=6)
+        self.lower.grid(row=71, column=19)
+
+        ## Spacing on page
+        self.grid_columnconfigure(3, minsize=20) ## Plot spacing
+        self.grid_columnconfigure(0, minsize=5) ## Push from left edge
+        self.grid_columnconfigure(15, minsize=15)
+        self.grid_columnconfigure(2, minsize=20) ## Number of columns column
+        self.grid_columnconfigure(4, minsize=110)
+        self.grid_columnconfigure(17, minsize=10)
+        self.grid_rowconfigure(3, minsize=20)
+        self.grid_rowconfigure(4, minsize=20)
+        self.grid_rowconfigure(12, minsize=20)
+        self.grid_rowconfigure(18, minsize=10)
+        self.grid_rowconfigure(69, minsize=10)
+        self.grid_rowconfigure(66, minsize=10)
+        self.grid_rowconfigure(10, minsize=10)
+#        self.grid_rowconfigure(103, minsize=20)
+
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -450,7 +634,7 @@ class PageThree(tk.Frame):
 
 app = AstroApp()
 #ani = animation.FuncAnimation(f, self.getResponses)
-#app.geometry("800x600")
+app.geometry("1024x600")
 app.mainloop()
 
 
