@@ -18,10 +18,13 @@ SMALL_FONT=("Verdana", 8)
 style.use('ggplot')
 
 
-## Figures
+## Figures and constants
 f = Figure(figsize=(8,5))
 g = Figure(figsize=(6,6))
 h = Figure(figsize=(4,2))
+
+sl=3E5
+conv=np.pi/180
 
 def popupmsg(msg):
     popup = tk.Tk()
@@ -418,7 +421,7 @@ class PageOne(tk.Frame):
             x=(x[1:]+x[:-1])/2 # for len(x)==len(y)
             data=np.vstack((x,y)).T
         
-        ## Bins and their respective populations
+            ## Bins and their respective populations
             self.bins = binN
             self.datax_bins = data[:,0]
             self.datay_hist = data[:,1]
@@ -430,7 +433,7 @@ class PageOne(tk.Frame):
         else:
             pass
         
-        ## BINWIDTH SET TO ###
+        ## BINWIDTH SET TO LABEL ###
 
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
@@ -440,16 +443,27 @@ class PageTwo(PageOne):
         self.RA = []
         self.DEC = []
         self.redshift = []
-        self.H0 = []
+        self.pec_VEL = []
+        self.data = []
+        self.H0 = 70.0
         self.z_mean = []
-        self.wm = []
-        self.wv = []
+        self.wm = 0.3
+        self.wv = 0.7
         self.RA_ent=[]
         self.DEC_ent=[]
         self.REDSHIFT_ent=[]
+        self.H0_ent=[]
+        self.wm_ent=[]
+        self.wv_ent=[]
+        self.latitude=[]
+        self.longitude=[]
         self.mini_binwidth=[]
         self.upper = []
         self.lower = []
+        self.combo = []
+        self.vline_upper = []
+        self.vline_lower = []
+#        self.bars = []
 
         tk.Frame.__init__(self, parent)
         label10 = tk.Label(self, text='Sky Coordinates', font=LARGE_FONT)
@@ -491,11 +505,6 @@ class PageTwo(PageOne):
         self.REDSHIFT_ent = ttk.Entry(self, width=3)
         self.REDSHIFT_ent.grid(row=9, column=2)
 
-        ## Set data button
-        button12 = ttk.Button(self, text='Set Data', command= self.getContent)
-        button12.grid(row=11, column=1, sticky='sw')
-
-
         ## Cosmology
         label16 = ttk.Label(self, text='Cosmology', font=LARGE_FONT)
         label16.grid(row=13, column=1, sticky='sw')
@@ -513,25 +522,28 @@ class PageTwo(PageOne):
         label20.grid(row=17, column=2, sticky='sw')
 
         ## Data variables entries
-        self.H0 = ttk.Entry(self, width=15)
-        self.H0.insert(0, '70')
-        self.H0.grid(row=14, column=1, sticky='w')
+        self.H0_ent = ttk.Entry(self, width=15)
+        self.H0_ent.insert(0, '70')
+        self.H0_ent.grid(row=14, column=1, sticky='w')
 
-        self.wm = ttk.Entry(self, width=15)
-        self.wm.insert(0, '0.3')
-        self.wm.grid(row=15, column=1, sticky='w')
+        self.wm_ent = ttk.Entry(self, width=15)
+        self.wm_ent.insert(0, '0.3')
+        self.wm_ent.grid(row=15, column=1, sticky='w')
 
-        self.z_mean = ttk.Entry(self, width=15)
-        self.z_mean.grid(row=16, column=1, sticky='w')
+        self.z_mean_ent = ttk.Entry(self, width=15)
+        self.z_mean_ent.grid(row=16, column=1, sticky='w')
 
-        self.wv = ttk.Entry(self, width=15)
-        self.wv.insert(0, '0.7')
-        self.wv.grid(row=17, column=1, sticky='w')
+        self.wv_ent = ttk.Entry(self, width=15)
+        self.wv_ent.insert(0, '0.7')
+        self.wv_ent.grid(row=17, column=1, sticky='w')
+
+        ## Set data button
+        button12 = ttk.Button(self, text='Set Data', command=self.getSkyCoords)
+        button12.grid(row=11, column=1, sticky='sw')
 
         ## Set cosmology button
-        button13 = ttk.Button(self, text='Set Cosmology')#, command= self.cosmo)
+        button13 = ttk.Button(self, text='Set Cosmology', command= self.setCosmology)
         button13.grid(row=19, column=1, sticky='sw')
-
 
         ## Type of plot
         main_plot = g.add_subplot(111)
@@ -552,6 +564,20 @@ class PageTwo(PageOne):
         canvas_hist.get_tk_widget().grid(row=5, column=16, rowspan=50, columnspan=10, sticky='NS')
         canvas_hist.show()
 
+        ## Dropdown box label
+        label25 = ttk.Label(self, text='Plot type:', font= NORML_FONT)
+        label25.grid(row=102, column=4, sticky='w')
+
+        ## Plot dropdown box
+        self.combo = ttk.Combobox(self, width=22)
+        self.combo['values'] = ('Celestial Coordinates','Cluster Centric')
+        self.combo.current(0)
+        self.combo.grid(row=102, column=5, sticky='SW')
+
+        ## Set plots
+        button16 = ttk.Button(self, text='Set Plots',  command = lambda: self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot))
+        button16.grid(row=103, column=4, sticky='w')
+
         ## Histogram labels
         ## Binwidth
         label21 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
@@ -561,7 +587,7 @@ class PageTwo(PageOne):
         self.mini_binwidth.grid(row=67, column=18, columnspan=2, sticky='ew')
 
         ## Set binwidth button
-        button14 = ttk.Button(self, text='Set binwidth')#, command= self.cosmo)
+        button14 = ttk.Button(self, text='Set binwidth', command= lambda: self.pop_bins(canvas_hist, hist_plot))
         button14.grid(row=68, column=16, sticky='ew')
 
         ## Boundaries labels
@@ -569,30 +595,30 @@ class PageTwo(PageOne):
         label22.grid(row=70, column=16, sticky='ew')
 
         ## Set crop button
-        button15 = ttk.Button(self, text='Crop to bounds')#, command= self.cosmo)
+        button15 = ttk.Button(self, text='Crop to bounds', command = lambda: self.drawBounds(canvas_hist, hist_plot))
         button15.grid(row=71, column=16, sticky='ew')
 
         ## Boundaries labels
         label23 = ttk.Label(self, text='Upper', font= NORML_FONT)
-        label23.grid(row=70, column=18, sticky='w')
+        label23.grid(row=71, column=18, sticky='w')
 
         ## Boundaries labels
         label24 = ttk.Label(self, text='Lower', font= NORML_FONT)
-        label24.grid(row=71, column=18, sticky='w')
+        label24.grid(row=70, column=18, sticky='w')
 
         ## Boundaries entry boxes
         self.upper = ttk.Entry(self, width=6)
-        self.upper.grid(row=70, column=19)
+        self.upper.grid(row=71, column=19)
 
         self.lower = ttk.Entry(self, width=6)
-        self.lower.grid(row=71, column=19)
+        self.lower.grid(row=70, column=19)
 
         ## Spacing on page
         self.grid_columnconfigure(3, minsize=20) ## Plot spacing
         self.grid_columnconfigure(0, minsize=5) ## Push from left edge
         self.grid_columnconfigure(15, minsize=15)
         self.grid_columnconfigure(2, minsize=20) ## Number of columns column
-        self.grid_columnconfigure(4, minsize=110)
+        self.grid_columnconfigure(4, minsize=20)
         self.grid_columnconfigure(17, minsize=10)
         self.grid_rowconfigure(3, minsize=20)
         self.grid_rowconfigure(4, minsize=20)
@@ -601,8 +627,193 @@ class PageTwo(PageOne):
         self.grid_rowconfigure(69, minsize=10)
         self.grid_rowconfigure(66, minsize=10)
         self.grid_rowconfigure(10, minsize=10)
-#        self.grid_rowconfigure(103, minsize=20)
+        self.grid_rowconfigure(101, minsize=10)
+        self.grid_rowconfigure(20, minsize=10)
 
+    def getSkyCoords(self):
+        self.RA = []
+        self.DEC = []
+        self.redshift = []
+        self.z_mean = []
+
+        if len(self.data) == 0:
+            popupmsg("Must enter RA, DEC, and redshift before setting data")
+        else:
+            try:
+                self.RA = [x[int(self.RA_ent.get())-1] for x in self.data]
+            except ValueError:
+                popupmsg("Must enter RA column number")
+            except IndexError:
+                popupmsg("Invalid column number for x-data")
+            
+            try:
+                self.DEC = [y[int(self.DEC_ent.get())-1] for y in self.data]
+            except ValueError:
+                popupmsg("Must enter DEC column number")
+            except IndexError:
+                popupmsg("Invalid column number for DEC")
+
+            try:
+                self.redshift = [red[int(self.REDSHIFT_ent.get())-1] for red in self.data]
+                self.z_mean = round(np.mean(self.redshift),3)
+                vc = self.z_mean*sl
+                self.pec_VEL = vc+sl*((self.redshift-self.z_mean)/(1+self.z_mean))
+
+                ## Set z_mean_ent text
+                self.z_mean_ent.delete(0, len(str(self.z_mean)))
+                self.z_mean_ent.insert(0, str(self.z_mean))
+
+            except ValueError:
+                popupmsg("Must enter redshift column number")
+            except IndexError:
+                popupmsg("Invalid column number for redshift data")
+
+    def plot_Main_Hist(self, canvas_main, main_plot, canvas_hist, hist_plot):
+        main_plot.clear()
+        hist_plot.clear()
+
+        hist_plot.hist(self.pec_VEL, color='blue')
+        hist_plot.set_title('Peculiar Velocities')
+#        canvas_hist.draw()
+
+#        _ = [b.remove() for b in self.bars]
+
+        if self.combo.get() == 'Celestial Coordinates':
+            main_plot.plot(self.RA, self.DEC, 'o')
+            main_plot.set_xlabel('RA')
+            main_plot.set_ylabel('DEC')
+            canvas_main.draw()
+
+
+        if self.combo.get() == 'Cluster Centric':
+
+            ## converting RA & DEC to radian, getting center
+            gal_RA=[x*conv for x in self.RA]
+            gal_DEC=[x*conv for x in self.DEC]
+            cen_RA=np.mean(self.RA)*conv
+            cen_DEC=np.mean(self.DEC)*conv
+            mems=len(self.RA)
+
+            angle_RA=[]
+            for i in range(mems):
+                angle_RA.append(np.arccos(np.sin(cen_RA)*np.sin(gal_RA[i])+np.cos(cen_RA)*np.cos(gal_RA[i])*(np.cos(cen_DEC-cen_DEC)))*(180/np.pi))
+            angle_RA=np.array(angle_RA) ## Degrees
+
+            angle_DEC=[]
+            for i in range(mems):
+                angle_DEC.append(np.arccos(np.sin(cen_RA)*np.sin(cen_RA)+np.cos(cen_RA)*np.cos(cen_RA)*(np.cos(cen_DEC-gal_DEC[i])))*(180/np.pi))
+            angle_DEC=np.array(angle_DEC) ## Degrees
+
+            RA_diff=[]
+            DEC_diff=[]
+            for i in range(mems):
+                RA_diff.append(cen_RA-gal_RA[i])
+                DEC_diff.append(gal_DEC[i]-cen_DEC)
+	
+            ## getting the index of negative values
+            east_ind=[i for i,x in enumerate(RA_diff) if x < 0]
+            south_ind=[i for i,x in enumerate(DEC_diff) if x < 0]
+
+            ## conversion to linear distances
+            linear_RA=angle_RA*3600*3.696
+            linear_DEC=angle_DEC*3600*3.696
+            mod_RA=linear_RA[east_ind]
+            mod_DEC=linear_DEC[south_ind]
+
+            ## converting latitude values that should be negative, negative via index
+            new_lat=[]
+            for i in range(mems):
+                if linear_RA[i] in mod_RA:
+                    new_lat.append(linear_RA[i]*-1) ##east
+                else:
+                    new_lat.append(linear_RA[i])
+
+            ## converting longitude values that should be negative, negative via index
+            new_long=[]
+            for i in range(mems):
+                if linear_DEC[i] in mod_DEC:
+                    new_long.append(linear_DEC[i]*-1) ##south
+                else:
+                    new_long.append(linear_DEC[i])
+
+            self.latitude = new_lat
+            self.longitude = new_long
+            
+            main_plot.plot(self.latitude, self.longitude, 'o')
+            main_plot.set_xlabel('Kpc')
+            main_plot.set_ylabel('Kpc')
+            canvas_main.draw()
+
+
+    def pop_bins(self, canvas_hist, hist_plot):
+        hist_plot.clear()
+
+#        try:
+#            _ = [b.remove() for b in self.bars]
+#        except IndexError:
+#            print("Nope")
+
+        if len(self.pec_VEL) != 0:
+            ## Number of bins
+            binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
+
+            ## Preparing historgram
+#            y,x=np.histogram(self.pec_VEL,int(binN))
+#            x=(x[1:]+x[:-1])/2 # for len(x)==len(y)
+#            data=np.vstack((x,y)).T
+        
+            ## Bins and their respective populations
+#            self.bins = binN
+#            self.datax_bins = data[:,0]
+#            self.datay_hist = data[:,1]
+#            self.sigma = data[:,1]**0.5
+
+            hist_plot.hist(self.pec_VEL, bins=int(binN)) ## Stop plotting orange
+
+#            _ = [b.remove() for b in self.bars]
+            hist_plot.set_title('Peculiar Velocities')
+            canvas_hist.draw()
+        else:
+            pass
+
+    def drawBounds(self, canvas_hist, hist_plot):
+        try:
+            self.vline_upper.pop(0).remove()
+            self.vline_lower.pop(0).remove()
+        except IndexError:
+            pass
+
+        self.vline_upper=hist_plot.axvline(float(self.upper.get()), color='green')
+        self.vline_lower=hist_plot.axvline(float(self.lower.get()), color='green')
+        canvas_hist.draw()
+
+    def setCosmology(self):
+        self.H0 = self.H0_ent.get()
+        self.z_mean = self.z_mean_ent.get()
+        self.wm = self.wm_ent.get()
+        self.wv = self.wv_ent.get()
+
+        ## Initializing cosmology labels
+#        label26 = ttk.Label(self, text="u'H\u2080' = 12", font= SMALL_FONT)
+#        label27 = ttk.Label(self, text='2', font= SMALL_FONT)
+#        label28 = ttk.Label(self, text='2', font= SMALL_FONT)
+#        label29 = ttk.Label(self, text='2', font= SMALL_FONT)
+#        label30 = ttk.Label(self, text='Cosmology Set at:', font=NORML_FONT)
+#        label30.grid(row=21, column=1, sticky='w')
+#        label26.grid(row=22, column=1, sticky='ew')
+#        label27.grid(row=23, column=1, sticky='ew')
+#        label28.grid(row=24, column=1, sticky='ew')
+#        label29.grid(row=25, column=1, sticky='ew')
+
+
+        ## Labels of current cosmology
+
+#    def onpick1(self,event):
+#        artist = event.artist
+#        if isinstance(artist, AxesImage):
+#            mouseevent = event.mouseevent
+#            self.x = mouseevent.xdata
+#            self.y = mouseevent.ydata
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -638,6 +849,83 @@ app.geometry("1024x600")
 app.mainloop()
 
 
+## Plotting and clicking-------------------------------------------------------------------------------------------------------------------------
+def fmt(x, y):
+    return 'x: {x:0.2f}\ny: {y:0.2f}'.format(x = x, y = y)
+
+
+
+class DataCursor(object):
+    # http://stackoverflow.com/a/4674445/190597
+    """A simple data cursor widget that displays the x,y location of a
+    matplotlib artist when it is selected."""
+    def __init__(self, artists, x = [], y = [], tolerance = 5, offsets = (-20, 20),
+                 formatter = fmt, display_all = False):
+        """Create the data cursor and connect it to the relevant figure.
+        "artists" is the matplotlib artist or sequence of artists that will be 
+            selected. 
+        "tolerance" is the radius (in points) that the mouse click must be
+            within to select the artist.
+        "offsets" is a tuple of (x,y) offsets in points from the selected
+            point to the displayed annotation box
+        "formatter" is a callback function which takes 2 numeric arguments and
+            returns a string
+        "display_all" controls whether more than one annotation box will
+            be shown if there are multiple axes.  Only one will be shown
+            per-axis, regardless. 
+        """
+        self._points = np.column_stack((x,y))
+        self.formatter = formatter
+        self.offsets = offsets
+        self.display_all = display_all
+        if not cbook.iterable(artists):
+            artists = [artists]
+        self.artists = artists
+        self.axes = tuple(set(art.axes for art in self.artists))
+        self.figures = tuple(set(ax.figure for ax in self.axes))
+
+        self.annotations = {}
+        for ax in self.axes:
+            self.annotations[ax] = self.annotate(ax)
+
+        for artist in self.artists:
+            artist.set_picker(tolerance)
+        for fig in self.figures:
+            fig.canvas.mpl_connect('pick_event', self)
+
+    def annotate(self, ax):
+        """Draws and hides the annotation box for the given axis "ax"."""
+        annotation = ax.annotate(self.formatter, xy = (0, 0), ha = 'right',
+                xytext = self.offsets, textcoords = 'offset points', va = 'bottom',
+                bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+                arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0')
+                )
+        annotation.set_visible(False)
+        return annotation
+
+    def snap(self, x, y):
+        """Return the value in self._points closest to (x, y).
+        """
+        idx = np.nanargmin(((self._points - (x,y))**2).sum(axis = -1))
+        return self._points[idx]
+    def __call__(self, event):
+        """Intended to be called through "mpl_connect"."""
+        # Rather than trying to interpolate, just display the clicked coords
+        # This will only be called if it's within "tolerance", anyway.
+        x, y = event.mouseevent.xdata, event.mouseevent.ydata
+        annotation = self.annotations[event.artist.axes]
+        if x is not None:
+            if not self.display_all:
+                # Hide any other annotation boxes...
+                for ann in self.annotations.values():
+                    ann.set_visible(False)
+            # Update the annotation in the current axis..
+            x, y = self.snap(x, y)
+            annotation.xy = x, y
+            annotation.set_text(self.formatter(x, y))
+            annotation.set_visible(True)
+            event.canvas.draw()
+
 ## Possibly useful things------------------------------------------------------------------------------------------------------------------------
 
 ## Backgrounds
@@ -658,4 +946,3 @@ app.mainloop()
 #        xdata_choice = ttk.Combobox(self, textvariable=choiceVar, values=choices)
 #        xdata_choice.bind('<Configure>', self.on_combo_configure)
 #        xdata_choice.grid(row=6, column=2, sticky='e')
-
