@@ -672,9 +672,13 @@ class PageTwo(PageOne):
         main_plot.clear()
         hist_plot.clear()
 
-        hist_plot.hist(self.pec_VEL, color='blue')
+        hist_plot.hist(self.pec_VEL, color='blue', range=(min(self.pec_VEL), max(self.pec_VEL)))
+
+#        n, bins, patches = plt.hist(self.pec_VEL, color='blue')
+#        hist_plot(bins)
         hist_plot.set_title('Peculiar Velocities')
-#        canvas_hist.draw()
+
+        canvas_hist.draw()
 
 #        _ = [b.remove() for b in self.bars]
 
@@ -715,7 +719,7 @@ class PageTwo(PageOne):
             south_ind=[i for i,x in enumerate(DEC_diff) if x < 0]
 
             ## conversion to linear distances
-            linear_RA=angle_RA*3600*3.696
+            linear_RA=angle_RA*3600*3.696      ## This needs to be modified after cosmolgy function is complete
             linear_DEC=angle_DEC*3600*3.696
             mod_RA=linear_RA[east_ind]
             mod_DEC=linear_DEC[south_ind]
@@ -747,6 +751,7 @@ class PageTwo(PageOne):
 
     def pop_bins(self, canvas_hist, hist_plot):
         hist_plot.clear()
+#        canvas_hist.clf()
 
 #        try:
 #            _ = [b.remove() for b in self.bars]
@@ -768,7 +773,7 @@ class PageTwo(PageOne):
 #            self.datay_hist = data[:,1]
 #            self.sigma = data[:,1]**0.5
 
-            hist_plot.hist(self.pec_VEL, bins=int(binN)) ## Stop plotting orange
+            hist_plot.hist(self.pec_VEL, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL))) ## Stop plotting orange
 
 #            _ = [b.remove() for b in self.bars]
             hist_plot.set_title('Peculiar Velocities')
@@ -777,15 +782,22 @@ class PageTwo(PageOne):
             pass
 
     def drawBounds(self, canvas_hist, hist_plot):
+        #try:
+        del hist_plot.lines[:]
+        #except IndexError:
+        #    pass
+        #except AttributeError:
+        #    pass
+        
         try:
-            self.vline_upper.pop(0).remove()
-            self.vline_lower.pop(0).remove()
-        except IndexError:
+            if float(self.lower.get()) > float(self.upper.get()):
+                popupmsg('Lower bound must be less than upper bound')
+            else:
+                self.vline_upper=hist_plot.axvline(float(self.upper.get()), color='green')
+                self.vline_lower=hist_plot.axvline(float(self.lower.get()), color='green')
+            canvas_hist.draw()
+        except ValueError:
             pass
-
-        self.vline_upper=hist_plot.axvline(float(self.upper.get()), color='green')
-        self.vline_lower=hist_plot.axvline(float(self.lower.get()), color='green')
-        canvas_hist.draw()
 
     def setCosmology(self):
         self.H0 = self.H0_ent.get()
@@ -808,12 +820,16 @@ class PageTwo(PageOne):
 
         ## Labels of current cosmology
 
+#    def cosmology_formula(self):
+
+
 #    def onpick1(self,event):
 #        artist = event.artist
 #        if isinstance(artist, AxesImage):
 #            mouseevent = event.mouseevent
 #            self.x = mouseevent.xdata
 #            self.y = mouseevent.ydata
+
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -845,7 +861,7 @@ class PageThree(tk.Frame):
 
 app = AstroApp()
 #ani = animation.FuncAnimation(f, self.getResponses)
-app.geometry("1024x600")
+app.geometry("1024x650")
 app.mainloop()
 
 
