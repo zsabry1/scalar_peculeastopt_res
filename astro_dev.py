@@ -469,6 +469,9 @@ class PageTwo(PageOne):
         self.bounded_DEC = []
         self.bounded_redshift = []
         self.bounded_pec_VEL = []
+        self.bounded_latitude = []
+        self.bounded_longitude = []
+        self.bounded_z_mean = []
 #        self.bars = []
 
         tk.Frame.__init__(self, parent)
@@ -567,7 +570,7 @@ class PageTwo(PageOne):
 
         ## Plotting canvas hist
         canvas_hist = FigureCanvasTkAgg(h, self)
-        canvas_hist.get_tk_widget().grid(row=5, column=16, rowspan=50, columnspan=10, sticky='NS')
+        canvas_hist.get_tk_widget().grid(row=5, column=16, rowspan=50, columnspan=10, sticky='NSW')
         canvas_hist.show()
 
         ## Dropdown box label
@@ -604,9 +607,13 @@ class PageTwo(PageOne):
         button15 = ttk.Button(self, text='Crop to bounds', command = lambda: self.drawBounds(canvas_hist, hist_plot))
         button15.grid(row=71, column=16, sticky='ew')
 
-        ## Set update plot button
+        ## Set update plots button
         button17 = ttk.Button(self, text='Update Plots', command = lambda: self.bounder(canvas_main, main_plot, canvas_hist, hist_plot))
         button17.grid(row=103, column=19, sticky='ew')
+
+        ## Set reset plots button
+        button18 = ttk.Button(self, text='Reset Plots', command = lambda: self.reset(canvas_main, main_plot, canvas_hist, hist_plot))
+        button18.grid(row=103, column=16, sticky='ew')
 
         ## Boundaries labels
         label23 = ttk.Label(self, text='Upper', font= NORML_FONT)
@@ -623,6 +630,24 @@ class PageTwo(PageOne):
         self.lower = ttk.Entry(self, width=6)
         self.lower.grid(row=70, column=19)
 
+        ## Information panel
+        infor = tk.Canvas(self, width=250, height=75)
+        infor.config(bg='white')
+        infor.grid(row=1, column=16, rowspan=100, columnspan=10, sticky='NW')
+
+        ## Coordinate information panel title
+        label31 = ttk.Label(self, text='Coordinate Information', font= NORML_FONT, background='white')
+        label31.grid(row=1, column=16, columnspan=10, sticky='NW')
+
+        ## Coordinate Angular distance
+        label33 = ttk.Label(self, text='Angular Separation (arcsec) =', font= SMALL_FONT, background='white')
+        label33.grid(row=2, column=16, columnspan=10, sticky='NW')
+
+        ## Coordinate linear separation
+        label34 = ttk.Label(self, text='Linear Separation (kpc) = ', font= SMALL_FONT, background='white')
+        label34.grid(row=3, column=16, columnspan=10, sticky='NW')
+        
+
         ## Spacing on page
         self.grid_columnconfigure(3, minsize=20) ## Plot spacing
         self.grid_columnconfigure(0, minsize=5) ## Push from left edge
@@ -630,6 +655,7 @@ class PageTwo(PageOne):
         self.grid_columnconfigure(2, minsize=20) ## Number of columns column
         self.grid_columnconfigure(4, minsize=20)
         self.grid_columnconfigure(17, minsize=10)
+        self.grid_rowconfigure(2, minsize=10)
         self.grid_rowconfigure(3, minsize=20)
         self.grid_rowconfigure(4, minsize=20)
         self.grid_rowconfigure(12, minsize=20)
@@ -664,6 +690,7 @@ class PageTwo(PageOne):
                 popupmsg("Invalid column number for DEC")
 
             try:
+                ## Starts to breakdown as speeds become relativistic
                 self.redshift = [red[int(self.REDSHIFT_ent.get())-1] for red in self.data]
                 self.z_mean = round(np.mean(self.redshift),3)
                 vc = self.z_mean*sl
@@ -682,35 +709,58 @@ class PageTwo(PageOne):
         main_plot.clear()
         hist_plot.clear()
 
-        if self.bounded_pec_VEL != 0:
+        if len(self.bounded_pec_VEL) != 0:
+            binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
+#            y, x, _ = hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+            hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+
+            ## Number of points
+            NumPoints=len(self.bounded_RA)
+            hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
+
 
         else:
-        hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
-        hist_plot.set_xlim([min(self.pec_VEL)-100, max(self.pec_VEL)+100])
+            ## Plotting
+#            y, x, _ = hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
+            hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
 
-#        n, bins, patches = plt.hist(self.pec_VEL, color='blue')
-#        hist_plot(bins)
+            ## Label of opened file
+            NumPoints=len(self.RA)
+            hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
+
         hist_plot.set_title('Peculiar Velocities')
         canvas_hist.draw()
 
-
-#        _ = [b.remove() for b in self.bars]
-
+        ## Plotting celestial coordinates
         if self.combo.get() == 'Celestial Coordinates':
-            main_plot.plot(self.RA, self.DEC, 'o')
-            main_plot.set_xlabel('RA')
-            main_plot.set_ylabel('DEC')
-            canvas_main.draw()
+            if len(self.bounded_RA) != 0:
+                main_plot.plot(self.bounded_RA, self.bounded_DEC, 'o')
+                main_plot.set_xlabel('RA')
+                main_plot.set_ylabel('DEC')
+                canvas_main.draw()
+            else:
+                main_plot.plot(self.RA, self.DEC, 'o')
+                main_plot.set_xlabel('RA')
+                main_plot.set_ylabel('DEC')
+                canvas_main.draw()
 
-
+        ## Plotting cluster centric coordinates
         if self.combo.get() == 'Cluster Centric':
+            if len(self.bounded_RA) != 0:
+                ## converting RA & DEC to radian, getting center
+                gal_RA=[x*conv for x in self.bounded_RA]
+                gal_DEC=[x*conv for x in self.bounded_DEC]
+                cen_RA=np.mean(self.bounded_RA)*conv
+                cen_DEC=np.mean(self.bounded_DEC)*conv
+                mems=len(self.bounded_RA)
 
-            ## converting RA & DEC to radian, getting center
-            gal_RA=[x*conv for x in self.RA]
-            gal_DEC=[x*conv for x in self.DEC]
-            cen_RA=np.mean(self.RA)*conv
-            cen_DEC=np.mean(self.DEC)*conv
-            mems=len(self.RA)
+            else:
+                ## converting RA & DEC to radian, getting center
+                gal_RA=[x*conv for x in self.RA]
+                gal_DEC=[x*conv for x in self.DEC]
+                cen_RA=np.mean(self.RA)*conv
+                cen_DEC=np.mean(self.DEC)*conv
+                mems=len(self.RA)
 
             angle_RA=[]
             for i in range(mems):
@@ -770,21 +820,31 @@ class PageTwo(PageOne):
             ## Number of bins
             binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
             hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
-            hist_plot.set_xlim([min(self.bounded_pec_VEL)-100, max(self.bounded_pec_VEL)+100])
+            hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
 
             hist_plot.set_title('Peculiar Velocities')
+
+            ## Number of points
+            NumPoints=len(self.bounded_RA)
+            hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
             canvas_hist.draw()
         else:
             if len(self.pec_VEL) != 0:
                 ## Number of bins
                 binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
                 hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)))
-                hist_plot.set_xlim([min(self.pec_VEL)-100, max(self.pec_VEL)+100])
+                hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
 
                 hist_plot.set_title('Peculiar Velocities')
+
+                ## Label of opened file
+                NumPoints=len(self.RA)
+                hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
                 canvas_hist.draw()
             else:
                 pass
+
+
 
     def drawBounds(self, canvas_hist, hist_plot):
         del hist_plot.lines[:]
@@ -795,14 +855,36 @@ class PageTwo(PageOne):
             else:
                 self.vline_upper=hist_plot.axvline(float(self.upper.get()), color='green')
                 self.vline_lower=hist_plot.axvline(float(self.lower.get()), color='green')
-                hist_plot.set_xlim([min(self.pec_VEL)-100, max(self.pec_VEL)+100])
+
+                if len(self.bounded_pec_VEL) !=0:
+                hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
 
                 ## Setting bounded data precursors
                 self.bound_lower = float(self.lower.get())
                 self.bound_upper = float(self.upper.get())
+                
+#            ## MAKE BARS TO BE INCLUDED ORANGE
+#            for i in range(len(self.RA)):
+#                if self.
             canvas_hist.draw()
         except ValueError:
             pass
+
+        if len(self.bounded_pec_VEL) != 0:
+            binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
+#            y, x, _ = hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+            hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+
+            ## Number of points
+            NumPoints=len(self.bounded_RA)
+            hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
+
+
+        else:
+            ## Plotting
+#            y, x, _ = hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
+            hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+
 
     def bounder(self, canvas_main, main_plot, canvas_hist, hist_plot):
         self.bounded_RA = []
@@ -816,20 +898,38 @@ class PageTwo(PageOne):
                 self.bounded_RA.append(self.RA[i])
                 self.bounded_DEC.append(self.DEC[i])
                 self.bounded_redshift.append(self.redshift[i])
-                self.bounded_pec_VEL.append(self.pec_VEL[i])
+#                self.bounded_pec_VEL.append(self.pec_VEL[i])
 
-        ## Updating histogram
-        hist_plot.clear()
-        hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
-        canvas_hist.draw()
+        ## Starts to breakdown as speeds become relativistic
+#       self.redshift = [red[int(self.REDSHIFT_ent.get())-1] for red in self.data]
 
-        ## Updating celestial coordinates plot
-        main_plot.clear()
-        if self.combo.get() == 'Celestial Coordinates':
-            main_plot.plot(self.bounded_RA, self.bounded_DEC, 'o')
-            main_plot.set_xlabel('RA')
-            main_plot.set_ylabel('DEC')
-            canvas_main.draw()
+        self.bounded_z_mean = round(np.mean(self.bounded_redshift),3)
+        vc = self.bounded_z_mean*sl
+        self.bounded_pec_VEL = vc+sl*((self.bounded_redshift-self.bounded_z_mean)/(1+self.bounded_z_mean))
+
+        ## Set z_mean_ent text
+        if len(str(self.bounded_z_mean)) != 0:
+            self.z_mean_ent.delete(0, len(str(self.bounded_z_mean)))
+            self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+        else:
+            self.z_mean_ent.delete(0, len(str(self.z_mean)))
+            self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+
+        ## Plotting updated main and histogram
+        self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot)
+
+
+
+
+    def reset(self, canvas_main, main_plot, canvas_hist, hist_plot):
+        self.bounded_RA = []
+        self.bounded_DEC = []
+        self.bounded_redshift = []
+        self.bounded_pec_VEL = []
+
+        ## Plotting main as OG
+        self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot)
+
 
 
     def setCosmology(self):
@@ -837,6 +937,8 @@ class PageTwo(PageOne):
         self.z_mean = self.z_mean_ent.get()
         self.wm = self.wm_ent.get()
         self.wv = self.wv_ent.get()
+
+        ## E function
 
         ## Initializing cosmology labels
 #        label26 = ttk.Label(self, text="u'H\u2080' = 12", font= SMALL_FONT)
