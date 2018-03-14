@@ -428,7 +428,7 @@ class PageOne(tk.Frame):
             self.sigma = data[:,1]**0.5
 
 #            binN=math.ceil((np.max(self.datax)-np.min(self.datax))/float(binwidth))
-            a.hist(self.datax, bins=int(binN))
+            a.hist(self.datax, color='blue', bins=int(binN))
             canvas.draw()
         else:
             pass
@@ -463,6 +463,12 @@ class PageTwo(PageOne):
         self.combo = []
         self.vline_upper = []
         self.vline_lower = []
+        self.bound_lower = []
+        self.bound_upper = []
+        self.bounded_RA = []
+        self.bounded_DEC = []
+        self.bounded_redshift = []
+        self.bounded_pec_VEL = []
 #        self.bars = []
 
         tk.Frame.__init__(self, parent)
@@ -598,6 +604,10 @@ class PageTwo(PageOne):
         button15 = ttk.Button(self, text='Crop to bounds', command = lambda: self.drawBounds(canvas_hist, hist_plot))
         button15.grid(row=71, column=16, sticky='ew')
 
+        ## Set update plot button
+        button17 = ttk.Button(self, text='Update Plots', command = lambda: self.bounder(canvas_main, main_plot, canvas_hist, hist_plot))
+        button17.grid(row=103, column=19, sticky='ew')
+
         ## Boundaries labels
         label23 = ttk.Label(self, text='Upper', font= NORML_FONT)
         label23.grid(row=71, column=18, sticky='w')
@@ -672,13 +682,17 @@ class PageTwo(PageOne):
         main_plot.clear()
         hist_plot.clear()
 
-        hist_plot.hist(self.pec_VEL, color='blue', range=(min(self.pec_VEL), max(self.pec_VEL)))
+        if self.bounded_pec_VEL != 0:
+
+        else:
+        hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
+        hist_plot.set_xlim([min(self.pec_VEL)-100, max(self.pec_VEL)+100])
 
 #        n, bins, patches = plt.hist(self.pec_VEL, color='blue')
 #        hist_plot(bins)
         hist_plot.set_title('Peculiar Velocities')
-
         canvas_hist.draw()
+
 
 #        _ = [b.remove() for b in self.bars]
 
@@ -751,43 +765,29 @@ class PageTwo(PageOne):
 
     def pop_bins(self, canvas_hist, hist_plot):
         hist_plot.clear()
-#        canvas_hist.clf()
 
-#        try:
-#            _ = [b.remove() for b in self.bars]
-#        except IndexError:
-#            print("Nope")
-
-        if len(self.pec_VEL) != 0:
+        if len(self.bounded_RA) != 0:
             ## Number of bins
-            binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
+            binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
+            hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+            hist_plot.set_xlim([min(self.bounded_pec_VEL)-100, max(self.bounded_pec_VEL)+100])
 
-            ## Preparing historgram
-#            y,x=np.histogram(self.pec_VEL,int(binN))
-#            x=(x[1:]+x[:-1])/2 # for len(x)==len(y)
-#            data=np.vstack((x,y)).T
-        
-            ## Bins and their respective populations
-#            self.bins = binN
-#            self.datax_bins = data[:,0]
-#            self.datay_hist = data[:,1]
-#            self.sigma = data[:,1]**0.5
-
-            hist_plot.hist(self.pec_VEL, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL))) ## Stop plotting orange
-
-#            _ = [b.remove() for b in self.bars]
             hist_plot.set_title('Peculiar Velocities')
             canvas_hist.draw()
         else:
-            pass
+            if len(self.pec_VEL) != 0:
+                ## Number of bins
+                binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
+                hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)))
+                hist_plot.set_xlim([min(self.pec_VEL)-100, max(self.pec_VEL)+100])
+
+                hist_plot.set_title('Peculiar Velocities')
+                canvas_hist.draw()
+            else:
+                pass
 
     def drawBounds(self, canvas_hist, hist_plot):
-        #try:
         del hist_plot.lines[:]
-        #except IndexError:
-        #    pass
-        #except AttributeError:
-        #    pass
         
         try:
             if float(self.lower.get()) > float(self.upper.get()):
@@ -795,9 +795,42 @@ class PageTwo(PageOne):
             else:
                 self.vline_upper=hist_plot.axvline(float(self.upper.get()), color='green')
                 self.vline_lower=hist_plot.axvline(float(self.lower.get()), color='green')
+                hist_plot.set_xlim([min(self.pec_VEL)-100, max(self.pec_VEL)+100])
+
+                ## Setting bounded data precursors
+                self.bound_lower = float(self.lower.get())
+                self.bound_upper = float(self.upper.get())
             canvas_hist.draw()
         except ValueError:
             pass
+
+    def bounder(self, canvas_main, main_plot, canvas_hist, hist_plot):
+        self.bounded_RA = []
+        self.bounded_DEC = []
+        self.bounded_redshift = []
+        self.bounded_pec_VEL = []
+        
+        ## Getting bounded conditions
+        for i in range(len(self.pec_VEL)):
+            if self.bound_lower <= self.pec_VEL[i] <= self.bound_upper:
+                self.bounded_RA.append(self.RA[i])
+                self.bounded_DEC.append(self.DEC[i])
+                self.bounded_redshift.append(self.redshift[i])
+                self.bounded_pec_VEL.append(self.pec_VEL[i])
+
+        ## Updating histogram
+        hist_plot.clear()
+        hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+        canvas_hist.draw()
+
+        ## Updating celestial coordinates plot
+        main_plot.clear()
+        if self.combo.get() == 'Celestial Coordinates':
+            main_plot.plot(self.bounded_RA, self.bounded_DEC, 'o')
+            main_plot.set_xlabel('RA')
+            main_plot.set_ylabel('DEC')
+            canvas_main.draw()
+
 
     def setCosmology(self):
         self.H0 = self.H0_ent.get()
