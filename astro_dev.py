@@ -20,7 +20,7 @@ style.use('ggplot')
 
 ## Figures and constants
 f = Figure(figsize=(8,5))
-g = Figure(figsize=(6,6))
+g = Figure(figsize=(6,6)) ## Make this square
 h = Figure(figsize=(4,2))
 
 sl=3E5
@@ -444,6 +444,7 @@ class PageTwo(PageOne):
         self.DEC = []
         self.redshift = []
         self.pec_VEL = []
+        self.rec_VEL = []
         self.data = []
         self.H0 = 70.0
         self.z_mean = []
@@ -472,7 +473,7 @@ class PageTwo(PageOne):
         self.bounded_latitude = []
         self.bounded_longitude = []
         self.bounded_z_mean = []
-#        self.bars = []
+        self.bounded_rec_VEL = []
 
         tk.Frame.__init__(self, parent)
         label10 = tk.Label(self, text='Sky Coordinates', font=LARGE_FONT)
@@ -579,12 +580,22 @@ class PageTwo(PageOne):
 
         ## Plot dropdown box
         self.combo = ttk.Combobox(self, width=22)
-        self.combo['values'] = ('Celestial Coordinates','Cluster Centric')
+        self.combo['values'] = ('Celestial Coordinates','Cluster Centric', 'RA vs. Redshift', 'DEC vs. Redshift')
         self.combo.current(0)
         self.combo.grid(row=102, column=5, sticky='SW')
 
+        ## Radiobuttions ## variable is option for grouping buttons
+        hist_type=tk.IntVar()
+        hist_type.set(1)
+        radiobutton1=ttk.Radiobutton(self, text='Pec. Vel', variable=hist_type, value=1, command = lambda: self.Hist_Typer(canvas_hist, hist_plot, hist_type))
+#        radiobutton1.invoke()
+        radiobutton1.grid(row=68, column=18, sticky='w')
+
+        radiobutton2=ttk.Radiobutton(self, text='Rec. Vel', variable=hist_type, value=2, command = lambda: self.Hist_Typer(canvas_hist, hist_plot, hist_type))
+        radiobutton2.grid(row=68, column=19, sticky='w')
+
         ## Set plots
-        button16 = ttk.Button(self, text='Set Plots',  command = lambda: self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot))
+        button16 = ttk.Button(self, text='Set Plots', command = lambda: self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot, hist_type))
         button16.grid(row=103, column=4, sticky='w')
 
         ## Histogram labels
@@ -598,6 +609,7 @@ class PageTwo(PageOne):
         ## Set binwidth button
         button14 = ttk.Button(self, text='Set binwidth', command= lambda: self.pop_bins(canvas_hist, hist_plot))
         button14.grid(row=68, column=16, sticky='ew')
+
 
         ## Boundaries labels
         label22 = ttk.Label(self, text='Boundaries:', font= NORML_FONT)
@@ -694,7 +706,10 @@ class PageTwo(PageOne):
                 self.redshift = [red[int(self.REDSHIFT_ent.get())-1] for red in self.data]
                 self.z_mean = round(np.mean(self.redshift),3)
                 vc = self.z_mean*sl
-                self.pec_VEL = vc+sl*((self.redshift-self.z_mean)/(1+self.z_mean))
+                
+                ## Non-relativistic
+                self.pec_VEL = sl*((self.redshift-self.z_mean)/(1+self.z_mean))
+                self.rec_VEL = [x*sl for x in self.redshift]
 
                 ## Set z_mean_ent text
                 self.z_mean_ent.delete(0, len(str(self.z_mean)))
@@ -705,31 +720,49 @@ class PageTwo(PageOne):
             except IndexError:
                 popupmsg("Invalid column number for redshift data")
 
-    def plot_Main_Hist(self, canvas_main, main_plot, canvas_hist, hist_plot):
+    def plot_Main_Hist(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type):
         main_plot.clear()
         hist_plot.clear()
 
         if len(self.bounded_pec_VEL) != 0:
-            binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
-#            y, x, _ = hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
-            hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+            if hist_type.get() == 1:
+#                binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
 
-            ## Number of points
+                hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+
+#                hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+                hist_plot.set_title('Peculiar Velocities')
+
+            else:
+#                binN=math.ceil((np.max(self.bounded_rec_VEL)-np.min(self.bounded_rec_VEL))/float(self.mini_binwidth.get()))
+
+                hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
+
+#                hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
+                hist_plot.set_title('Recessional Velocities')
+
+            ## Number of data points
             NumPoints=len(self.bounded_RA)
             hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
 
-
         else:
-            ## Plotting
-#            y, x, _ = hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
-            hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+            if hist_type.get() == 1:
+                hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
+                hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+                hist_plot.set_title('Peculiar Velocities')
+            else:
+                hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, range=(min(self.rec_VEL), max(self.rec_VEL)))
+                hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
+                hist_plot.set_title('Recessional Velocities')
 
-            ## Label of opened file
+            ## Number of data points
             NumPoints=len(self.RA)
             hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
 
-        hist_plot.set_title('Peculiar Velocities')
         canvas_hist.draw()
+
 
         ## Plotting celestial coordinates
         if self.combo.get() == 'Celestial Coordinates':
@@ -743,6 +776,30 @@ class PageTwo(PageOne):
                 main_plot.set_xlabel('RA')
                 main_plot.set_ylabel('DEC')
                 canvas_main.draw()
+
+        if self.combo.get() == 'RA vs. Redshift':
+                if len(self.bounded_RA) != 0:
+                    main_plot.plot(self.bounded_redshift, self.bounded_RA, 'o')
+                    main_plot.set_xlabel('Redshift')
+                    main_plot.set_ylabel('RA')
+                    canvas_main.draw()
+                else:
+                    main_plot.plot(self.redshift, self.RA, 'o')
+                    main_plot.set_xlabel('Redshift')
+                    main_plot.set_ylabel('RA')
+                    canvas_main.draw()
+
+        if self.combo.get() == 'DEC vs. Redshift':
+                if len(self.bounded_RA) != 0:
+                    main_plot.plot(self.bounded_redshift, self.bounded_DEC, 'o')
+                    main_plot.set_xlabel('Redshift')
+                    main_plot.set_ylabel('DEC')
+                    canvas_main.draw()
+                else:
+                    main_plot.plot(self.redshift, self.DEC, 'o')
+                    main_plot.set_xlabel('Redshift')
+                    main_plot.set_ylabel('DEC')
+                    canvas_main.draw()
 
         ## Plotting cluster centric coordinates
         if self.combo.get() == 'Cluster Centric':
@@ -844,6 +901,9 @@ class PageTwo(PageOne):
             else:
                 pass
 
+    def Hist_Typer(self, canvas_hist, hist_plot, hist_type):            
+        hist_plot.clear()
+
 
 
     def drawBounds(self, canvas_hist, hist_plot):
@@ -856,37 +916,28 @@ class PageTwo(PageOne):
                 self.vline_upper=hist_plot.axvline(float(self.upper.get()), color='green')
                 self.vline_lower=hist_plot.axvline(float(self.lower.get()), color='green')
 
-                if len(self.bounded_pec_VEL) !=0:
-                hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+                if len(self.bounded_pec_VEL) != 0:
+                    hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+                else:
+                    hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
 
-                ## Setting bounded data precursors
-                self.bound_lower = float(self.lower.get())
-                self.bound_upper = float(self.upper.get())
+            ## Setting bounded data precursors
+            self.bound_lower = float(self.lower.get())
+            self.bound_upper = float(self.upper.get())
+
+            canvas_hist.draw()
+
+#            if len(self.bounded_pec_VEL) !=0:
+#                hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
                 
 #            ## MAKE BARS TO BE INCLUDED ORANGE
 #            for i in range(len(self.RA)):
 #                if self.
-            canvas_hist.draw()
         except ValueError:
             pass
 
-        if len(self.bounded_pec_VEL) != 0:
-            binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
-#            y, x, _ = hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
-            hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
 
-            ## Number of points
-            NumPoints=len(self.bounded_RA)
-            hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
-
-
-        else:
-            ## Plotting
-#            y, x, _ = hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
-            hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
-
-
-    def bounder(self, canvas_main, main_plot, canvas_hist, hist_plot):
+    def bounder(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type):
         self.bounded_RA = []
         self.bounded_DEC = []
         self.bounded_redshift = []
@@ -905,7 +956,8 @@ class PageTwo(PageOne):
 
         self.bounded_z_mean = round(np.mean(self.bounded_redshift),3)
         vc = self.bounded_z_mean*sl
-        self.bounded_pec_VEL = vc+sl*((self.bounded_redshift-self.bounded_z_mean)/(1+self.bounded_z_mean))
+        self.bounded_pec_VEL = sl*((self.bounded_redshift-self.bounded_z_mean)/(1+self.bounded_z_mean))
+        self.bounded_rec_VEL = [x*sl for x in self.bounded_redshift]
 
         ## Set z_mean_ent text
         if len(str(self.bounded_z_mean)) != 0:
@@ -916,19 +968,19 @@ class PageTwo(PageOne):
             self.z_mean_ent.insert(0, str(self.bounded_z_mean))
 
         ## Plotting updated main and histogram
-        self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot)
+        self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot, hist_type)
 
 
 
 
-    def reset(self, canvas_main, main_plot, canvas_hist, hist_plot):
+    def reset(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type):
         self.bounded_RA = []
         self.bounded_DEC = []
         self.bounded_redshift = []
         self.bounded_pec_VEL = []
 
         ## Plotting main as OG
-        self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot)
+        self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot, hist_type)
 
 
 
