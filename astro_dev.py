@@ -607,7 +607,7 @@ class PageTwo(PageOne):
         self.mini_binwidth.grid(row=67, column=18, columnspan=2, sticky='ew')
 
         ## Set binwidth button
-        button14 = ttk.Button(self, text='Set binwidth', command= lambda: self.pop_bins(canvas_hist, hist_plot))
+        button14 = ttk.Button(self, text='Set binwidth', command= lambda: self.pop_bins(canvas_hist, hist_plot, hist_type))
         button14.grid(row=68, column=16, sticky='ew')
 
 
@@ -616,15 +616,15 @@ class PageTwo(PageOne):
         label22.grid(row=70, column=16, sticky='ew')
 
         ## Set crop button
-        button15 = ttk.Button(self, text='Crop to bounds', command = lambda: self.drawBounds(canvas_hist, hist_plot))
+        button15 = ttk.Button(self, text='Crop to bounds', command = lambda: self.drawBounds(canvas_hist, hist_plot, hist_type))
         button15.grid(row=71, column=16, sticky='ew')
 
         ## Set update plots button
-        button17 = ttk.Button(self, text='Update Plots', command = lambda: self.bounder(canvas_main, main_plot, canvas_hist, hist_plot))
+        button17 = ttk.Button(self, text='Update Plots', command = lambda: self.bounder(canvas_main, main_plot, canvas_hist, hist_plot, hist_type))
         button17.grid(row=103, column=19, sticky='ew')
 
         ## Set reset plots button
-        button18 = ttk.Button(self, text='Reset Plots', command = lambda: self.reset(canvas_main, main_plot, canvas_hist, hist_plot))
+        button18 = ttk.Button(self, text='Reset Plots', command = lambda: self.reset(canvas_main, main_plot, canvas_hist, hist_plot, hist_type))
         button18.grid(row=103, column=16, sticky='ew')
 
         ## Boundaries labels
@@ -870,16 +870,21 @@ class PageTwo(PageOne):
             canvas_main.draw()
 
 
-    def pop_bins(self, canvas_hist, hist_plot):
+    def pop_bins(self, canvas_hist, hist_plot, hist_type):
         hist_plot.clear()
 
         if len(self.bounded_RA) != 0:
-            ## Number of bins
-            binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
-            hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
-            hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
-
-            hist_plot.set_title('Peculiar Velocities')
+            if hist_type.get() == 1:
+                ## Number of bins
+                binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
+                hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+                hist_plot.set_title('Peculiar Velocities')
+            else:
+                binN=math.ceil((np.max(self.bounded_rec_VEL)-np.min(self.bounded_rec_VEL))/float(self.mini_binwidth.get()))
+                hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
+                hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
+                hist_plot.set_title('Recessional Velocities')
 
             ## Number of points
             NumPoints=len(self.bounded_RA)
@@ -887,12 +892,17 @@ class PageTwo(PageOne):
             canvas_hist.draw()
         else:
             if len(self.pec_VEL) != 0:
-                ## Number of bins
-                binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
-                hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)))
-                hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
-
-                hist_plot.set_title('Peculiar Velocities')
+                if hist_type.get() ==1:
+                    ## Number of bins
+                    binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
+                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)))
+                    hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+                    hist_plot.set_title('Peculiar Velocities')
+                else:
+                    binN=math.ceil((np.max(self.rec_VEL)-np.min(self.rec_VEL))/float(self.mini_binwidth.get()))
+                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.rec_VEL), max(self.rec_VEL)))
+                    hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
+                    hist_plot.set_title('Recessional Velocities')
 
                 ## Label of opened file
                 NumPoints=len(self.RA)
@@ -901,12 +911,83 @@ class PageTwo(PageOne):
             else:
                 pass
 
-    def Hist_Typer(self, canvas_hist, hist_plot, hist_type):            
+
+
+    def Hist_Typer(self, canvas_hist, hist_plot, hist_type):
         hist_plot.clear()
+        try:
+            if hist_type.get() == 1:
+                if len(self.bounded_pec_VEL) != 0:
+                    binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
+                    hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                    hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+                    hist_plot.set_title('Peculiar Velocities')
+                    NumPoints=len(self.bounded_pec_VEL)
+                else:
+                    binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
+                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)))
+                    hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+                    hist_plot.set_title('Peculiar Velocities')
+                    NumPoints=len(self.pec_VEL)
+
+                ## Number of data points
+                hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
+                canvas_hist.draw()
+
+            else:
+                if len(self.bounded_rec_VEL) != 0:
+                    binN=math.ceil((np.max(self.bounded_rec_VEL)-np.min(self.bounded_rec_VEL))/float(self.mini_binwidth.get()))
+                    hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
+                    hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
+                    hist_plot.set_title('Recessional Velocities')
+                    NumPoints=len(self.bounded_rec_VEL)
+                else:
+                    binN=math.ceil((np.max(self.rec_VEL)-np.min(self.rec_VEL))/float(self.mini_binwidth.get()))
+                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.rec_VEL), max(self.rec_VEL)))
+                    hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
+                    hist_plot.set_title('Recessional Velocities')
+                    NumPoints=len(self.rec_VEL)
+
+                ## Number of data points
+                hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
+                canvas_hist.draw()
+
+        except ValueError:
+            if hist_type.get() == 1:
+                if len(self.bounded_pec_VEL) != 0:
+                    hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                    hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+                    hist_plot.set_title('Peculiar Velocities')
+                    NumPoints=len(self.bounded_pec_VEL)
+                else:
+                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
+                    hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+                    hist_plot.set_title('Peculiar Velocities')
+                    NumPoints=len(self.pec_VEL)
+
+                ## Number of data points
+                hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
+                canvas_hist.draw()
+
+            else:
+                if len(self.bounded_rec_VEL) != 0:
+                    hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
+                    hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
+                    hist_plot.set_title('Recessional Velocities')
+                    NumPoints=len(self.bounded_rec_VEL)
+                else:
+                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, range=(min(self.rec_VEL), max(self.rec_VEL)))
+                    hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
+                    hist_plot.set_title('Recessional Velocities')
+                    NumPoints=len(self.rec_VEL)
+
+                ## Number of data points
+                hist_plot.text(0.98, 0.98, 'N = '+str(NumPoints), ha='right', va='top', transform=hist_plot.transAxes)
+                canvas_hist.draw()
 
 
 
-    def drawBounds(self, canvas_hist, hist_plot):
+    def drawBounds(self, canvas_hist, hist_plot, hist_type):
         del hist_plot.lines[:]
         
         try:
@@ -916,10 +997,18 @@ class PageTwo(PageOne):
                 self.vline_upper=hist_plot.axvline(float(self.upper.get()), color='green')
                 self.vline_lower=hist_plot.axvline(float(self.lower.get()), color='green')
 
-                if len(self.bounded_pec_VEL) != 0:
-                    hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+                if hist_type.get() == 1:
+                    if len(self.bounded_pec_VEL) != 0:
+                        hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
+                    else:
+                        hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+
                 else:
-                    hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
+                    if len(self.bounded_rec_VEL) != 0:
+                        hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
+                    else:
+                        hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
+
 
             ## Setting bounded data precursors
             self.bound_lower = float(self.lower.get())
@@ -927,57 +1016,74 @@ class PageTwo(PageOne):
 
             canvas_hist.draw()
 
-#            if len(self.bounded_pec_VEL) !=0:
-#                hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
-                
-#            ## MAKE BARS TO BE INCLUDED ORANGE
-#            for i in range(len(self.RA)):
-#                if self.
         except ValueError:
             pass
 
 
-    def bounder(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type):
+
+    def bounder(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type): ## THIS NEEDS TO BE FIXED
         self.bounded_RA = []
         self.bounded_DEC = []
-        self.bounded_redshift = []
+        self.bounded_redshift = [] #############################################################################################################################
         self.bounded_pec_VEL = []
-        
-        ## Getting bounded conditions
-        for i in range(len(self.pec_VEL)):
-            if self.bound_lower <= self.pec_VEL[i] <= self.bound_upper:
-                self.bounded_RA.append(self.RA[i])
-                self.bounded_DEC.append(self.DEC[i])
-                self.bounded_redshift.append(self.redshift[i])
-#                self.bounded_pec_VEL.append(self.pec_VEL[i])
+        self.bounded_rec_VEL = []
 
-        ## Starts to breakdown as speeds become relativistic
-#       self.redshift = [red[int(self.REDSHIFT_ent.get())-1] for red in self.data]
+        ## Getting bounded conditions ## WE NEED HIST TYPER
+        if hist_type.get() == 1:
+            for i in range(len(self.pec_VEL)):
+                if self.bound_lower <= self.pec_VEL[i] <= self.bound_upper:
+                    self.bounded_RA.append(self.RA[i])
+                    self.bounded_DEC.append(self.DEC[i])
+                    self.bounded_redshift.append(self.redshift[i])
 
-        self.bounded_z_mean = round(np.mean(self.bounded_redshift),3)
-        vc = self.bounded_z_mean*sl
-        self.bounded_pec_VEL = sl*((self.bounded_redshift-self.bounded_z_mean)/(1+self.bounded_z_mean))
-        self.bounded_rec_VEL = [x*sl for x in self.bounded_redshift]
+                    ## Relativistic calculations of speed
+                    self.bounded_z_mean = round(np.mean(self.bounded_redshift),3)
+                    vc = self.bounded_z_mean*sl
+                    self.bounded_pec_VEL = sl*((self.bounded_redshift-self.bounded_z_mean)/(1+self.bounded_z_mean))
+                    self.bounded_rec_VEL = [x*sl for x in self.bounded_redshift]
 
-        ## Set z_mean_ent text
-        if len(str(self.bounded_z_mean)) != 0:
-            self.z_mean_ent.delete(0, len(str(self.bounded_z_mean)))
-            self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+                    ## Set z_mean_ent text
+                    if len(str(self.bounded_z_mean)) != 0:
+                        self.z_mean_ent.delete(0, len(str(self.bounded_z_mean)))
+                        self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+                    else:
+                        self.z_mean_ent.delete(0, len(str(self.z_mean)))
+                        self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+
         else:
-            self.z_mean_ent.delete(0, len(str(self.z_mean)))
-            self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+            for i in range(len(self.rec_VEL)):
+                if self.bound_lower <= self.rec_VEL[i] <= self.bound_upper:
+                    self.bounded_RA.append(self.RA[i])
+                    self.bounded_DEC.append(self.DEC[i])
+                    self.bounded_redshift.append(self.redshift[i])
 
-        ## Plotting updated main and histogram
+                    ## Relativistic calculations of speed
+                    self.bounded_z_mean = round(np.mean(self.bounded_redshift),3)
+                    vc = self.bounded_z_mean*sl
+                    self.bounded_pec_VEL = sl*((self.bounded_redshift-self.bounded_z_mean)/(1+self.bounded_z_mean))
+                    self.bounded_rec_VEL = [x*sl for x in self.bounded_redshift]
+
+                    ## Set z_mean_ent text
+                    if len(str(self.bounded_z_mean)) != 0:
+                        self.z_mean_ent.delete(0, len(str(self.bounded_z_mean)))
+                        self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+                    else:
+                        self.z_mean_ent.delete(0, len(str(self.z_mean)))
+                        self.z_mean_ent.insert(0, str(self.bounded_z_mean))
+
         self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot, hist_type)
 
 
 
 
-    def reset(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type):
+    def reset(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type): ## FUCK
         self.bounded_RA = []
         self.bounded_DEC = []
         self.bounded_redshift = []
         self.bounded_pec_VEL = []
+
+        ## Reseting data
+        self.getSkyCoords()
 
         ## Plotting main as OG
         self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot, hist_type)
@@ -1051,83 +1157,6 @@ app = AstroApp()
 app.geometry("1024x650")
 app.mainloop()
 
-
-## Plotting and clicking-------------------------------------------------------------------------------------------------------------------------
-def fmt(x, y):
-    return 'x: {x:0.2f}\ny: {y:0.2f}'.format(x = x, y = y)
-
-
-
-class DataCursor(object):
-    # http://stackoverflow.com/a/4674445/190597
-    """A simple data cursor widget that displays the x,y location of a
-    matplotlib artist when it is selected."""
-    def __init__(self, artists, x = [], y = [], tolerance = 5, offsets = (-20, 20),
-                 formatter = fmt, display_all = False):
-        """Create the data cursor and connect it to the relevant figure.
-        "artists" is the matplotlib artist or sequence of artists that will be 
-            selected. 
-        "tolerance" is the radius (in points) that the mouse click must be
-            within to select the artist.
-        "offsets" is a tuple of (x,y) offsets in points from the selected
-            point to the displayed annotation box
-        "formatter" is a callback function which takes 2 numeric arguments and
-            returns a string
-        "display_all" controls whether more than one annotation box will
-            be shown if there are multiple axes.  Only one will be shown
-            per-axis, regardless. 
-        """
-        self._points = np.column_stack((x,y))
-        self.formatter = formatter
-        self.offsets = offsets
-        self.display_all = display_all
-        if not cbook.iterable(artists):
-            artists = [artists]
-        self.artists = artists
-        self.axes = tuple(set(art.axes for art in self.artists))
-        self.figures = tuple(set(ax.figure for ax in self.axes))
-
-        self.annotations = {}
-        for ax in self.axes:
-            self.annotations[ax] = self.annotate(ax)
-
-        for artist in self.artists:
-            artist.set_picker(tolerance)
-        for fig in self.figures:
-            fig.canvas.mpl_connect('pick_event', self)
-
-    def annotate(self, ax):
-        """Draws and hides the annotation box for the given axis "ax"."""
-        annotation = ax.annotate(self.formatter, xy = (0, 0), ha = 'right',
-                xytext = self.offsets, textcoords = 'offset points', va = 'bottom',
-                bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
-                arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0')
-                )
-        annotation.set_visible(False)
-        return annotation
-
-    def snap(self, x, y):
-        """Return the value in self._points closest to (x, y).
-        """
-        idx = np.nanargmin(((self._points - (x,y))**2).sum(axis = -1))
-        return self._points[idx]
-    def __call__(self, event):
-        """Intended to be called through "mpl_connect"."""
-        # Rather than trying to interpolate, just display the clicked coords
-        # This will only be called if it's within "tolerance", anyway.
-        x, y = event.mouseevent.xdata, event.mouseevent.ydata
-        annotation = self.annotations[event.artist.axes]
-        if x is not None:
-            if not self.display_all:
-                # Hide any other annotation boxes...
-                for ann in self.annotations.values():
-                    ann.set_visible(False)
-            # Update the annotation in the current axis..
-            x, y = self.snap(x, y)
-            annotation.xy = x, y
-            annotation.set_text(self.formatter(x, y))
-            annotation.set_visible(True)
-            event.canvas.draw()
 
 ## Possibly useful things------------------------------------------------------------------------------------------------------------------------
 
