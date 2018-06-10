@@ -22,35 +22,35 @@ class Draw_Lasso(object):
     def __init__(self, RA, DEC, color_other=0.1):
         self.fig, self.ax = plt.subplots()
         self.canvas = self.ax.figure.canvas
-        self.collection = self.ax.scatter(RA, DEC) ## Picker = 5 for close radius
+        self.collection = self.ax.scatter(RA, DEC, facecolors='blue') ## Picker = 5 for close radius
         self.color_other = color_other
 
         self.xys = self.collection.get_offsets()
-        self.Npts = len(self.xys)
-
-        # Ensure that we have separate colors for each object
-        self.fc = self.collection.get_facecolors()
-        print(self.fc)
-        if len(self.fc) == 0:
-            raise ValueError('Collection must have a facecolor')
-        elif len(self.fc) == 1:
-            self.fc = np.tile(self.fc, self.Npts).reshape(self.Npts, -1)
-
+        self.RA = RA
+        self.DEC = DEC
         self.lasso = LassoSelector(self.ax, onselect=self.onselect)
         self.ind = []
 
     def onselect(self, verts):
         path = Path(verts)
         self.ind = np.nonzero([path.contains_point(xy) for xy in self.xys])[0]
-        self.fc[:, -1] = self.color_other
-        self.fc[self.ind, -1] = 1
-        self.collection.set_facecolors(self.fc)
-        self.canvas.draw_idle()
 
-    def disconnect(self):
-        self.lasso.disconnect_events()
-        self.fc[:, -1] = 1
-        self.collection.set_facecolors(self.fc)
+        colors_array = []
+
+        for i in range(len(self.RA)):
+            if i in self.ind:
+                colors_array.append('red')
+            else:
+                ## points not in ellipse
+                colors_array.append('blue')
+
+        background = self.canvas.copy_from_bbox(self.ax.bbox)
+        # then during mouse move
+        self.canvas.restore_region(background)
+        self.ax.scatter(self.RA, self.DEC, c=colors_array, linewidths=0.3)
+        self.ax.draw_artist(self.ax)
+        self.canvas.blit(self.ax.bbox)
+        # only after mouse has stopped moving
         self.canvas.draw_idle()
 
     def show(self):
@@ -200,5 +200,5 @@ class Draw_Rectangle(object):
 x = np.random.randint(0, 100, 20)
 y = np.random.randint(0, 100, 20)
 
-a = Draw_Ellipse(x, y)
+a = Draw_Lasso(x, y)
 a.show()
