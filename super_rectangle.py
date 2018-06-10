@@ -1,11 +1,11 @@
 from matplotlib import pyplot as plt
 from matplotlib.widgets import RectangleSelector, EllipseSelector, LassoSelector
 from matplotlib.path import Path
+from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
 import numpy as np
 
 ## Filename
 dataR=np.loadtxt("rspecial2305.225.dat",skiprows=0)
-
 ## Column names & data preparation
 RA=dataR[:,0]
 DEC=dataR[:,1]
@@ -16,6 +16,17 @@ sl=3E5
 zbar=np.mean(REDSH)
 vc=zbar*sl
 VEL=vc+sl*((REDSH-zbar)/(1+zbar))
+
+class CustomToolbar(NavigationToolbar2TkAgg):
+    def __init__(self, canvas_, parent_):
+        self.toolitems = (('Home', 'Allasss', 'home', 'home'), ('Back', 'Back to  previous view', 'back', 'back'),
+                          ('Forward', 'Forward to next view', 'forward', 'forward'), (None, None, None, None),
+                          ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
+                          ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'), (None, None, None, None),
+                          ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
+                          ('Save', 'Save the figure', 'filesave', 'save_figure'),)
+        NavigationToolbar2TkAgg.__init__(self,canvas_,parent_)
+
 
 class Draw_Lasso(object):
 
