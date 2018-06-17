@@ -5,12 +5,14 @@ from matplotlib.figure import Figure
 import matplotlib.animation as animation
 from matplotlib import style
 from matplotlib import pyplot as plt
+#from super_rectangle import Draw_Lasso, Draw_Ellipse, Draw_Rectangle
 import numpy as np
 import math
 
 import tkinter as tk
 from tkinter import ttk
 import tkinter.font as tkfont
+from un import CustomToolbar as CTB
 
 LARGE_FONT=("Verdana", 12) ## Font specs
 NORML_FONT=("Verdana", 10)
@@ -35,8 +37,25 @@ def popupmsg(msg):
     B1.pack()
     popup.mainloop()
 
-def printer(thing):
-    print(thing)
+class CustomToolbar(NavigationToolbar2TkAgg):
+    def __init__(self,canvas_,parent_):
+        self.toolitems = (
+            ('Home', 'Reset original view', 'home', 'home'),
+            ('Back', 'Back to previous view', 'back', 'back'),
+            ('Forward', 'Forward to next view', 'forward', 'forward'),
+            ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
+            ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
+            ('Save', 'Save the figure', 'filesave', 'save_figure'),
+            # TODO Get this poor thing a nice gif
+            ('Rectangle', 'Draw rectangle', 'subplots', 'plot_axes'),)
+        NavigationToolbar2TkAgg.__init__(self,canvas_,parent_)
+
+    def plot_axes(self):
+        # This function currently makes it so that the 'original view' is lost
+        # TODO Fix the above bug
+        print("shawerma")
+        # self.canvas.figure.axes[0].set_xlim([15,45])
+        # self.canvas.draw()
 
 
 class AstroApp(tk.Tk):
@@ -218,9 +237,9 @@ class PageOne(tk.Frame):
         label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
 
         ## Toolbar
-        toolbar = NavigationToolbar2TkAgg(canvas, self)
+        toolbar = CTB(canvas, self)
         toolbar.grid(row=0,column=4, columnspan=100, sticky='ew')
-        #toolbar.update()
+        toolbar.update()
 
         ## Set plot button
         button4 = ttk.Button(self, text='Set Plot', command = lambda: self.getResponse(canvas, a, button5, label9))
@@ -565,7 +584,7 @@ class PageTwo(PageOne):
         canvas_main.show()
 
         ## Toolbar canvas main
-        toolbar = NavigationToolbar2TkAgg(canvas_main, self)
+        toolbar = CTB(canvas_main, self)
         toolbar.grid(row=0,column=4, columnspan=10, sticky='ew')
         #toolbar.update()
 

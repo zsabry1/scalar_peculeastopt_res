@@ -17,6 +17,8 @@ zbar=np.mean(REDSH)
 vc=zbar*sl
 VEL=vc+sl*((REDSH-zbar)/(1+zbar))
 
+
+'''
 class CustomToolbar(NavigationToolbar2TkAgg):
     def __init__(self, canvas_, parent_):
         self.toolitems = (('Home', 'Allasss', 'home', 'home'), ('Back', 'Back to  previous view', 'back', 'back'),
@@ -26,15 +28,15 @@ class CustomToolbar(NavigationToolbar2TkAgg):
                           ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
                           ('Save', 'Save the figure', 'filesave', 'save_figure'),)
         NavigationToolbar2TkAgg.__init__(self,canvas_,parent_)
+'''
 
 
 class Draw_Lasso(object):
 
-    def __init__(self, RA, DEC, color_other=0.1):
+    def __init__(self, RA, DEC):
         self.fig, self.ax = plt.subplots()
         self.canvas = self.ax.figure.canvas
         self.collection = self.ax.scatter(RA, DEC, facecolors='blue') ## Picker = 5 for close radius
-        self.color_other = color_other
 
         self.xys = self.collection.get_offsets()
         self.RA = RA
@@ -206,7 +208,6 @@ class Draw_Rectangle(object):
 
     def show(self):
         plt.show()
-
 
 x = np.random.randint(0, 100, 20)
 y = np.random.randint(0, 100, 20)
