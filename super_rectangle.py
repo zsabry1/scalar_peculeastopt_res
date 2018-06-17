@@ -1,46 +1,17 @@
 from matplotlib import pyplot as plt
 from matplotlib.widgets import RectangleSelector, EllipseSelector, LassoSelector
 from matplotlib.path import Path
-from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
-import numpy as np
-
-## Filename
-dataR=np.loadtxt("rspecial2305.225.dat",skiprows=0)
-## Column names & data preparation
-RA=dataR[:,0]
-DEC=dataR[:,1]
-ELR=dataR[:,2]
-REDSH=dataR[:,3]
-RADD=dataR[:,4]
-sl=3E5
-zbar=np.mean(REDSH)
-vc=zbar*sl
-VEL=vc+sl*((REDSH-zbar)/(1+zbar))
-
-
-'''
-class CustomToolbar(NavigationToolbar2TkAgg):
-    def __init__(self, canvas_, parent_):
-        self.toolitems = (('Home', 'Allasss', 'home', 'home'), ('Back', 'Back to  previous view', 'back', 'back'),
-                          ('Forward', 'Forward to next view', 'forward', 'forward'), (None, None, None, None),
-                          ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
-                          ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'), (None, None, None, None),
-                          ('Subplots', 'Configure subplots', 'subplots', 'configure_subplots'),
-                          ('Save', 'Save the figure', 'filesave', 'save_figure'),)
-        NavigationToolbar2TkAgg.__init__(self,canvas_,parent_)
-'''
-
 
 class Draw_Lasso(object):
 
-    def __init__(self, RA, DEC):
+    def __init__(self, x, y):
         self.fig, self.ax = plt.subplots()
         self.canvas = self.ax.figure.canvas
-        self.collection = self.ax.scatter(RA, DEC, facecolors='blue') ## Picker = 5 for close radius
+        self.collection = self.ax.scatter(x, y, facecolors='blue') ## Picker = 5 for close radius
 
         self.xys = self.collection.get_offsets()
-        self.RA = RA
-        self.DEC = DEC
+        self.x = x
+        self.y = y
         self.lasso = LassoSelector(self.ax, onselect=self.onselect)
         self.ind = []
 
@@ -50,7 +21,7 @@ class Draw_Lasso(object):
 
         colors_array = []
 
-        for i in range(len(self.RA)):
+        for i in range(len(self.x)):
             if i in self.ind:
                 colors_array.append('red')
             else:
@@ -60,14 +31,14 @@ class Draw_Lasso(object):
         background = self.canvas.copy_from_bbox(self.ax.bbox)
         # then during mouse move
         self.canvas.restore_region(background)
-        self.ax.scatter(self.RA, self.DEC, c=colors_array, linewidths=0.3)
+        self.ax.scatter(self.x, self.y, c=colors_array, linewidths=0.3)
         self.ax.draw_artist(self.ax)
         self.canvas.blit(self.ax.bbox)
         # only after mouse has stopped moving
         self.canvas.draw_idle()
 
-    def show(self):
-        plt.show()
+#    def show(self):
+#        plt.show()
 
 
 class Draw_Ellipse(object):
@@ -209,8 +180,8 @@ class Draw_Rectangle(object):
     def show(self):
         plt.show()
 
-x = np.random.randint(0, 100, 20)
-y = np.random.randint(0, 100, 20)
-
-a = Draw_Lasso(x, y)
-a.show()
+#import numpy as np
+#x = np.random.randint(0, 100, 20)
+#y = np.random.randint(0, 100, 20)
+#a = Draw_Lasso(x, y)
+#a.show()
