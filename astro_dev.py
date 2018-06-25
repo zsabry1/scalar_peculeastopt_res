@@ -37,26 +37,6 @@ def popupmsg(msg):
     B1.pack()
     popup.mainloop()
 
-class CustomToolbar(NavigationToolbar2TkAgg):
-    def __init__(self,canvas_,parent_):
-        self.toolitems = (
-            ('Home', 'Reset original view', 'home', 'home'),
-            ('Back', 'Back to previous view', 'back', 'back'),
-            ('Forward', 'Forward to next view', 'forward', 'forward'),
-            ('Pan', 'Pan axes with left mouse, zoom with right', 'move', 'pan'),
-            ('Zoom', 'Zoom to rectangle', 'zoom_to_rect', 'zoom'),
-            ('Save', 'Save the figure', 'filesave', 'save_figure'),
-            # TODO Get this poor thing a nice gif
-            ('Rectangle', 'Draw rectangle', 'subplots', 'plot_axes'),)
-        NavigationToolbar2TkAgg.__init__(self,canvas_,parent_)
-
-    def plot_axes(self):
-        # This function currently makes it so that the 'original view' is lost
-        # TODO Fix the above bug
-        print("shawerma")
-        # self.canvas.figure.axes[0].set_xlim([15,45])
-        # self.canvas.draw()
-
 
 class AstroApp(tk.Tk):
     def __init__(self, *args, **kwargs): ##kwargs, passing through dictionaries
@@ -237,7 +217,7 @@ class PageOne(tk.Frame):
         label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
 
         ## Toolbar
-        toolbar = CTB(canvas, self)
+        toolbar = NavigationToolbar2TkAgg(canvas, self)
         toolbar.grid(row=0,column=4, columnspan=100, sticky='ew')
         toolbar.update()
 
@@ -457,7 +437,7 @@ class PageOne(tk.Frame):
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
-class PageTwo(PageOne):
+class PageTwo(PageOne, CTB):
     def __init__(self,parent,controller):
         self.RA = []
         self.DEC = []
@@ -745,20 +725,12 @@ class PageTwo(PageOne):
 
         if len(self.bounded_pec_VEL) != 0:
             if hist_type.get() == 1:
-#                binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
-
-                hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
-
-#                hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                hist_plot.hist(self.bounded_pec_VEL,color='blue',alpha=0.5,range=(min(self.bounded_pec_VEL),max(self.bounded_pec_VEL)))
                 hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
                 hist_plot.set_title('Peculiar Velocities')
 
             else:
-#                binN=math.ceil((np.max(self.bounded_rec_VEL)-np.min(self.bounded_rec_VEL))/float(self.mini_binwidth.get()))
-
-                hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
-
-#                hist_plot.hist(self.bounded_pec_VEL, color='blue', bins=int(binN), alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                hist_plot.hist(self.bounded_rec_VEL,color='blue',alpha=0.5,range=(min(self.bounded_rec_VEL),max(self.bounded_rec_VEL)))
                 hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
                 hist_plot.set_title('Recessional Velocities')
 
@@ -786,36 +758,36 @@ class PageTwo(PageOne):
         ## Plotting celestial coordinates
         if self.combo.get() == 'Celestial Coordinates':
             if len(self.bounded_RA) != 0:
-                main_plot.plot(self.bounded_RA, self.bounded_DEC, 'o')
+                data = main_plot.scatter(self.bounded_RA, self.bounded_DEC)
                 main_plot.set_xlabel('RA')
                 main_plot.set_ylabel('DEC')
                 canvas_main.draw()
             else:
-                main_plot.plot(self.RA, self.DEC, 'o')
+                data = main_plot.scatter(self.RA, self.DEC)
                 main_plot.set_xlabel('RA')
                 main_plot.set_ylabel('DEC')
                 canvas_main.draw()
 
         if self.combo.get() == 'RA vs. Redshift':
                 if len(self.bounded_RA) != 0:
-                    main_plot.plot(self.bounded_redshift, self.bounded_RA, 'o')
+                    data = main_plot.scatter(self.bounded_redshift, self.bounded_RA)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('RA')
                     canvas_main.draw()
                 else:
-                    main_plot.plot(self.redshift, self.RA, 'o')
+                    data = main_plot.scatter(self.redshift, self.RA)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('RA')
                     canvas_main.draw()
 
         if self.combo.get() == 'DEC vs. Redshift':
                 if len(self.bounded_RA) != 0:
-                    main_plot.plot(self.bounded_redshift, self.bounded_DEC, 'o')
+                    data = main_plot.scatter(self.bounded_redshift, self.bounded_DEC)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('DEC')
                     canvas_main.draw()
                 else:
-                    main_plot.plot(self.redshift, self.DEC, 'o')
+                    data = main_plot.scatter(self.redshift, self.DEC)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('DEC')
                     canvas_main.draw()
@@ -883,10 +855,15 @@ class PageTwo(PageOne):
             self.latitude = new_lat
             self.longitude = new_long
             
-            main_plot.plot(self.latitude, self.longitude, 'o')
+            data = main_plot.scatter(self.latitude, self.longitude, 'o')
             main_plot.set_xlabel('Kpc')
             main_plot.set_ylabel('Kpc')
             canvas_main.draw()
+
+        CTB.x = data.get_offsets()[:,0]
+        CTB.y = data.get_offsets()[:,1]
+ 
+
 
 
     def pop_bins(self, canvas_hist, hist_plot, hist_type):
