@@ -1,15 +1,16 @@
-from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import NavigationToolbar2Tk
 import matplotlib.pyplot as plt
 from super_rectangle import Draw_Rectangle, Draw_Ellipse, Draw_Lasso
 
 # Custom toolbar
-class CustomToolbar(NavigationToolbar2TkAgg, Draw_Rectangle, Draw_Ellipse, Draw_Lasso):
+class CustomToolbar(NavigationToolbar2Tk, Draw_Rectangle, Draw_Ellipse, Draw_Lasso):
     x = []
     y = []
     canvas_main = []
     main_plot = []
     canvas_hist = []
     hist_plot = []
+    collections = []
 
     def __init__(self, canvas_, parent_):
         self.toolitems = (
@@ -25,14 +26,11 @@ class CustomToolbar(NavigationToolbar2TkAgg, Draw_Rectangle, Draw_Ellipse, Draw_
             ('Rectangle', 'Draw Rectangle', 'subplots', 'rectangle'),
             ('Ellipse', 'Draw Ellipse', 'subplots', 'ellipse'),
             ('Lasso', 'Draw lasso', 'subplots', 'lasso'),)
-        NavigationToolbar2TkAgg.__init__(self,canvas_,parent_)
+        NavigationToolbar2Tk.__init__(self,canvas_,parent_)
 
     def rectangle(self):
-        print('This is a rectangle')
-        print(CustomToolbar.x)
-        print(CustomToolbar.y)
-        a = Draw_Rectangle(CustomToolbar.x, CustomToolbar.y, CustomToolbar.canvas_main, CustomToolbar.main_plot.get_axes())
-        a.show()
+        a = Draw_Rectangle(CustomToolbar.x, CustomToolbar.y, CustomToolbar.canvas_main, CustomToolbar.main_plot)
+        CustomToolbar.canvas_main.draw()
         #self.x = x
         #self.y = y
         #print(self.x)
@@ -40,10 +38,7 @@ class CustomToolbar(NavigationToolbar2TkAgg, Draw_Rectangle, Draw_Ellipse, Draw_
 
 
     def ellipse(self):
-        print('This is an ellipse')
+        a = Draw_Ellipse(CustomToolbar.x, CustomToolbar.y, CustomToolbar.canvas_main, CustomToolbar.main_plot)
 
     def lasso(self):
-#        super_rectangle.Draw_ellipse(RA, DEC)
-        ax = plt.gca() ## get axis handle
-        print(ax.get_offsets())
-#        print(self.canvas.figure.get_xydata())
+        a = Draw_Lasso(CustomToolbar.x, CustomToolbar.y, CustomToolbar.canvas_main, CustomToolbar.main_plot, CustomToolbar.collections)

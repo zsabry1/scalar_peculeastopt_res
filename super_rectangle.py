@@ -1,13 +1,14 @@
 from matplotlib import pyplot as plt
 from matplotlib.widgets import RectangleSelector, EllipseSelector, LassoSelector
 from matplotlib.path import Path
+import numpy as np
 
 class Draw_Lasso(object):
 
-    def __init__(self, x, y):
-        self.fig, self.ax = plt.subplots()
-        self.canvas = self.ax.figure.canvas
-        self.collection = self.ax.scatter(x, y, facecolors='blue') ## Picker = 5 for close radius
+    def __init__(self, x, y, canvas, figure, data):
+        self.canvas = canvas        
+        self.ax = figure
+        self.collection = data
 
         self.xys = self.collection.get_offsets()
         self.x = x
@@ -31,20 +32,25 @@ class Draw_Lasso(object):
         background = self.canvas.copy_from_bbox(self.ax.bbox)
         # then during mouse move
         self.canvas.restore_region(background)
-        self.ax.scatter(self.x, self.y, c=colors_array, linewidths=0.3)
+        self.ax.clear()
+        self.ax.scatter(self.x, self.y, c=colors_array, linewidths=0.3, s=8)
         self.ax.draw_artist(self.ax)
         self.canvas.blit(self.ax.bbox)
         # only after mouse has stopped moving
         self.canvas.draw_idle()
+
+
+## Return i in self.x and self.y
+
 
 #    def show(self):
 #        plt.show()
 
 
 class Draw_Ellipse(object):
-    def __init__(self, RA, DEC):
-        self.fig, self.ax = plt.subplots()
-        self.canvas = self.ax.figure.canvas
+    def __init__(self, RA, DEC, canvas, figure):
+        self.canvas = canvas        
+        self.ax = figure
         self.ax.scatter(RA, DEC) ## Picker = 5 for close radius
         self.RA = RA
         self.DEC = DEC
@@ -110,8 +116,8 @@ class Draw_Ellipse(object):
 
 class Draw_Rectangle(object):
     def __init__(self, RA, DEC, canvas, figure):
-        self.fig, self.ax = figure
-        self.canvas = canvas
+        self.canvas = canvas        
+        self.ax = figure
         self.ax.scatter(RA, DEC) ## Picker = 5 for close radius
         self.RA = RA
         self.DEC = DEC
@@ -177,7 +183,7 @@ class Draw_Rectangle(object):
         # only after mouse has stopped moving
         self.canvas.draw_idle()
 
-    def show(self):
+    def draw(self):
         plt.show()
 
 #import numpy as np

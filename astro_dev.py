@@ -1,6 +1,6 @@
 import matplotlib
 matplotlib.use("TkAgg")
-from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2TkAgg
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg, NavigationToolbar2Tk
 from matplotlib.figure import Figure
 import matplotlib.animation as animation
 from matplotlib import style
@@ -10,6 +10,7 @@ import numpy as np
 import math
 
 import tkinter as tk
+from tkinter import filedialog
 from tkinter import ttk
 import tkinter.font as tkfont
 from un import CustomToolbar as CTB
@@ -22,7 +23,7 @@ style.use('ggplot')
 
 ## Figures and constants
 f = Figure(figsize=(8,5))
-g = Figure(figsize=(6,6)) ## Make this square
+g = Figure(figsize=(5,5)) ## Make this square
 h = Figure(figsize=(4,2))
 
 sl=3E5
@@ -36,6 +37,10 @@ def popupmsg(msg):
     B1 = ttk.Button(popup, text='Okay', command=popup.destroy)
     B1.pack()
     popup.mainloop()
+
+#def on_closing():
+#    if messagebox.askokcancel("Quit", "Do you want to quit?"):
+#        tk.Tk().destroy()
 
 
 class AstroApp(tk.Tk):
@@ -77,6 +82,11 @@ class AstroApp(tk.Tk):
     def show_frame(self, cont):
         frame = self.frames[cont] #cont is key, thrown into show_frame. self inherits
         frame.tkraise()    ## raise to the front
+
+    def doSomething():
+        # check if saving
+        # if not:
+        root.destroy()
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
@@ -210,14 +220,14 @@ class PageOne(tk.Frame):
         ## Plotting
         canvas = FigureCanvasTkAgg(f, self)
         canvas.get_tk_widget().grid(row=1, column=4, rowspan=100, columnspan=50, sticky='NS')
-        canvas.show()
+        canvas.draw()
 
         ## getResponse buttons
         button5 = ttk.Button(self, text='Set binwidth', command = lambda: self.populate_bins(canvas, a))
         label9 = ttk.Label(self, text='Enter binwidth:', font= NORML_FONT)
 
         ## Toolbar
-        toolbar = NavigationToolbar2TkAgg(canvas, self)
+        toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.grid(row=0,column=4, columnspan=100, sticky='ew')
         toolbar.update()
 
@@ -561,17 +571,17 @@ class PageTwo(PageOne, CTB):
         ## Plotting canvas main
         canvas_main = FigureCanvasTkAgg(g, self)
         canvas_main.get_tk_widget().grid(row=1, column=4, rowspan=100, columnspan=10, sticky='NS')
-        canvas_main.show()
+        canvas_main.draw()
 
         ## Toolbar canvas main
         toolbar = CTB(canvas_main, self)
-        toolbar.grid(row=0,column=4, columnspan=10, sticky='ew')
+        toolbar.grid(row=0,column=4, columnspan=15, sticky='ew')
         #toolbar.update()
 
         ## Plotting canvas hist
         canvas_hist = FigureCanvasTkAgg(h, self)
         canvas_hist.get_tk_widget().grid(row=5, column=16, rowspan=50, columnspan=10, sticky='NSW')
-        canvas_hist.show()
+        canvas_hist.draw()
 
         ## Dropdown box label
         label25 = ttk.Label(self, text='Plot type:', font= NORML_FONT)
@@ -723,14 +733,16 @@ class PageTwo(PageOne, CTB):
         main_plot.clear()
         hist_plot.clear()
 
+        main_plot.tick_params(axis='x', which='minor', rotation=45)
+
         if len(self.bounded_pec_VEL) != 0:
             if hist_type.get() == 1:
-                hist_plot.hist(self.bounded_pec_VEL,color='blue',alpha=0.5,range=(min(self.bounded_pec_VEL),max(self.bounded_pec_VEL)))
+                hist_plot.hist(self.bounded_pec_VEL,color='blue',alpha=0.5,range=(min(self.bounded_pec_VEL),max(self.bounded_pec_VEL)),edgecolor='black', linewidth=1)
                 hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
                 hist_plot.set_title('Peculiar Velocities')
 
             else:
-                hist_plot.hist(self.bounded_rec_VEL,color='blue',alpha=0.5,range=(min(self.bounded_rec_VEL),max(self.bounded_rec_VEL)))
+                hist_plot.hist(self.bounded_rec_VEL,color='blue',alpha=0.5,range=(min(self.bounded_rec_VEL),max(self.bounded_rec_VEL)),edgecolor='black',linewidth=1)
                 hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
                 hist_plot.set_title('Recessional Velocities')
 
@@ -740,11 +752,11 @@ class PageTwo(PageOne, CTB):
 
         else:
             if hist_type.get() == 1:
-                hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
+                hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)),edgecolor='black',linewidth=1)
                 hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
                 hist_plot.set_title('Peculiar Velocities')
             else:
-                hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, range=(min(self.rec_VEL), max(self.rec_VEL)))
+                hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, range=(min(self.rec_VEL), max(self.rec_VEL)),edgecolor='black',linewidth=1)
                 hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
                 hist_plot.set_title('Recessional Velocities')
 
@@ -758,36 +770,36 @@ class PageTwo(PageOne, CTB):
         ## Plotting celestial coordinates
         if self.combo.get() == 'Celestial Coordinates':
             if len(self.bounded_RA) != 0:
-                data = main_plot.scatter(self.bounded_RA, self.bounded_DEC)
+                data = main_plot.scatter(self.bounded_RA, self.bounded_DEC, color='blue', s=8)
                 main_plot.set_xlabel('RA')
                 main_plot.set_ylabel('DEC')
                 canvas_main.draw()
             else:
-                data = main_plot.scatter(self.RA, self.DEC)
+                data = main_plot.scatter(self.RA, self.DEC, color='blue', s=8)
                 main_plot.set_xlabel('RA')
                 main_plot.set_ylabel('DEC')
                 canvas_main.draw()
 
         if self.combo.get() == 'RA vs. Redshift':
                 if len(self.bounded_RA) != 0:
-                    data = main_plot.scatter(self.bounded_redshift, self.bounded_RA)
+                    data = main_plot.scatter(self.bounded_redshift, self.bounded_RA, color='blue', s=8)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('RA')
                     canvas_main.draw()
                 else:
-                    data = main_plot.scatter(self.redshift, self.RA)
+                    data = main_plot.scatter(self.redshift, self.RA, color='blue', s=8)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('RA')
                     canvas_main.draw()
 
         if self.combo.get() == 'DEC vs. Redshift':
                 if len(self.bounded_RA) != 0:
-                    data = main_plot.scatter(self.bounded_redshift, self.bounded_DEC)
+                    data = main_plot.scatter(self.bounded_redshift, self.bounded_DEC, color='blue', s=8)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('DEC')
                     canvas_main.draw()
                 else:
-                    data = main_plot.scatter(self.redshift, self.DEC)
+                    data = main_plot.scatter(self.redshift, self.DEC, color='blue', s=8)
                     main_plot.set_xlabel('Redshift')
                     main_plot.set_ylabel('DEC')
                     canvas_main.draw()
@@ -855,7 +867,7 @@ class PageTwo(PageOne, CTB):
             self.latitude = new_lat
             self.longitude = new_long
             
-            data = main_plot.scatter(self.latitude, self.longitude, 'o')
+            data = main_plot.scatter(self.latitude, self.longitude, 'o', s=10)
             main_plot.set_xlabel('Kpc')
             main_plot.set_ylabel('Kpc')
             canvas_main.draw()
@@ -864,11 +876,10 @@ class PageTwo(PageOne, CTB):
         CTB.x = data.get_offsets()[:,0]
         CTB.y = data.get_offsets()[:,1]
         CTB.canvas_main = canvas_main
-        CTB.main_plot = vendored_subplots(main_plot)
+        CTB.main_plot = main_plot
         CTB.canvas_hist = canvas_hist
         CTB.hist_plot = hist_plot
-        print(plt.subplots)
-        print(CTB.main_plot)
+        CTB.collections = data
  
 
 
@@ -880,12 +891,12 @@ class PageTwo(PageOne, CTB):
             if hist_type.get() == 1:
                 ## Number of bins
                 binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
-                hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)),edgecolor='black',linewidth=1)
                 hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
                 hist_plot.set_title('Peculiar Velocities')
             else:
                 binN=math.ceil((np.max(self.bounded_rec_VEL)-np.min(self.bounded_rec_VEL))/float(self.mini_binwidth.get()))
-                hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
+                hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)),edgecolor='black',linewidth=1)
                 hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
                 hist_plot.set_title('Recessional Velocities')
 
@@ -898,12 +909,12 @@ class PageTwo(PageOne, CTB):
                 if hist_type.get() ==1:
                     ## Number of bins
                     binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
-                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)))
+                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
                     hist_plot.set_title('Peculiar Velocities')
                 else:
                     binN=math.ceil((np.max(self.rec_VEL)-np.min(self.rec_VEL))/float(self.mini_binwidth.get()))
-                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.rec_VEL), max(self.rec_VEL)))
+                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.rec_VEL), max(self.rec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
                     hist_plot.set_title('Recessional Velocities')
 
@@ -922,13 +933,13 @@ class PageTwo(PageOne, CTB):
             if hist_type.get() == 1:
                 if len(self.bounded_pec_VEL) != 0:
                     binN=math.ceil((np.max(self.bounded_pec_VEL)-np.min(self.bounded_pec_VEL))/float(self.mini_binwidth.get()))
-                    hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                    hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
                     hist_plot.set_title('Peculiar Velocities')
                     NumPoints=len(self.bounded_pec_VEL)
                 else:
                     binN=math.ceil((np.max(self.pec_VEL)-np.min(self.pec_VEL))/float(self.mini_binwidth.get()))
-                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)))
+                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.pec_VEL), max(self.pec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
                     hist_plot.set_title('Peculiar Velocities')
                     NumPoints=len(self.pec_VEL)
@@ -940,13 +951,13 @@ class PageTwo(PageOne, CTB):
             else:
                 if len(self.bounded_rec_VEL) != 0:
                     binN=math.ceil((np.max(self.bounded_rec_VEL)-np.min(self.bounded_rec_VEL))/float(self.mini_binwidth.get()))
-                    hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
+                    hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
                     hist_plot.set_title('Recessional Velocities')
                     NumPoints=len(self.bounded_rec_VEL)
                 else:
                     binN=math.ceil((np.max(self.rec_VEL)-np.min(self.rec_VEL))/float(self.mini_binwidth.get()))
-                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.rec_VEL), max(self.rec_VEL)))
+                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, bins=int(binN), range=(min(self.rec_VEL), max(self.rec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
                     hist_plot.set_title('Recessional Velocities')
                     NumPoints=len(self.rec_VEL)
@@ -958,12 +969,12 @@ class PageTwo(PageOne, CTB):
         except ValueError:
             if hist_type.get() == 1:
                 if len(self.bounded_pec_VEL) != 0:
-                    hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)))
+                    hist_plot.hist(self.bounded_pec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.bounded_pec_VEL), max(self.bounded_pec_VEL)])
                     hist_plot.set_title('Peculiar Velocities')
                     NumPoints=len(self.bounded_pec_VEL)
                 else:
-                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)))
+                    hist_plot.hist(self.pec_VEL, color='blue', alpha=0.5, range=(min(self.pec_VEL), max(self.pec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.pec_VEL), max(self.pec_VEL)])
                     hist_plot.set_title('Peculiar Velocities')
                     NumPoints=len(self.pec_VEL)
@@ -974,12 +985,12 @@ class PageTwo(PageOne, CTB):
 
             else:
                 if len(self.bounded_rec_VEL) != 0:
-                    hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)))
+                    hist_plot.hist(self.bounded_rec_VEL, color='blue', alpha=0.5, range=(min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.bounded_rec_VEL), max(self.bounded_rec_VEL)])
                     hist_plot.set_title('Recessional Velocities')
                     NumPoints=len(self.bounded_rec_VEL)
                 else:
-                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, range=(min(self.rec_VEL), max(self.rec_VEL)))
+                    hist_plot.hist(self.rec_VEL, color='blue', alpha=0.5, range=(min(self.rec_VEL), max(self.rec_VEL)),edgecolor='black',linewidth=1)
                     hist_plot.set_xlim([min(self.rec_VEL), max(self.rec_VEL)])
                     hist_plot.set_title('Recessional Velocities')
                     NumPoints=len(self.rec_VEL)
@@ -1147,18 +1158,20 @@ class PageThree(tk.Frame):
         a.plot([1,2,3,4,5,6,7,8],[5,6,1,3,8,9,3,5])
 
         canvas = FigureCanvasTkAgg(f, self)
-        canvas.show()
+        canvas.draw()
         canvas.get_tk_widget().pack(side=tk.TOP, fill=tk.BOTH, expand=True)
 
-        toolbar = NavigationToolbar2TkAgg(canvas, self)
+        toolbar = NavigationToolbar2Tk(canvas, self)
         toolbar.update()
         canvas._tkcanvas.pack(side=tk.TOP, fill=tk.BOTH, expand=True)
+
+
 
 ##-----------------------------------------------------------------------------------------------------------------------------------------------
 
 app = AstroApp()
 #ani = animation.FuncAnimation(f, self.getResponses)
-app.geometry("1024x650")
+app.geometry("1150x700")
 app.mainloop()
 
 
