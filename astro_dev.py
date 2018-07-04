@@ -860,8 +860,15 @@ class PageTwo(PageOne, CTB):
             main_plot.set_ylabel('Kpc')
             canvas_main.draw()
 
+        ## Setting data for toolbar
         CTB.x = data.get_offsets()[:,0]
         CTB.y = data.get_offsets()[:,1]
+        CTB.canvas_main = canvas_main
+        CTB.main_plot = vendored_subplots(main_plot)
+        CTB.canvas_hist = canvas_hist
+        CTB.hist_plot = hist_plot
+        print(plt.subplots)
+        print(CTB.main_plot)
  
 
 
@@ -1077,6 +1084,7 @@ class PageTwo(PageOne, CTB):
         self.bounded_DEC = []
         self.bounded_redshift = []
         self.bounded_pec_VEL = []
+        self.bounded_rec_VEL = []
 
         ## Reseting data
         self.getSkyCoords()

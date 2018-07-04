@@ -109,9 +109,9 @@ class Draw_Ellipse(object):
 
 
 class Draw_Rectangle(object):
-    def __init__(self, RA, DEC):
-        self.fig, self.ax = plt.subplots()
-        self.canvas = self.ax.figure.canvas
+    def __init__(self, RA, DEC, canvas, figure):
+        self.fig, self.ax = figure
+        self.canvas = canvas
         self.ax.scatter(RA, DEC) ## Picker = 5 for close radius
         self.RA = RA
         self.DEC = DEC

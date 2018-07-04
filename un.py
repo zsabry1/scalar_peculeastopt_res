@@ -1,11 +1,15 @@
 from matplotlib.backends.backend_tkagg import NavigationToolbar2TkAgg
 import matplotlib.pyplot as plt
-import super_rectangle 
+from super_rectangle import Draw_Rectangle, Draw_Ellipse, Draw_Lasso
 
 # Custom toolbar
-class CustomToolbar(NavigationToolbar2TkAgg):
+class CustomToolbar(NavigationToolbar2TkAgg, Draw_Rectangle, Draw_Ellipse, Draw_Lasso):
     x = []
     y = []
+    canvas_main = []
+    main_plot = []
+    canvas_hist = []
+    hist_plot = []
 
     def __init__(self, canvas_, parent_):
         self.toolitems = (
@@ -27,6 +31,8 @@ class CustomToolbar(NavigationToolbar2TkAgg):
         print('This is a rectangle')
         print(CustomToolbar.x)
         print(CustomToolbar.y)
+        a = Draw_Rectangle(CustomToolbar.x, CustomToolbar.y, CustomToolbar.canvas_main, CustomToolbar.main_plot.get_axes())
+        a.show()
         #self.x = x
         #self.y = y
         #print(self.x)
