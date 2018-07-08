@@ -5,18 +5,23 @@ import numpy as np
 
 class Draw_Lasso(object):
 
-    def __init__(self, x, y, canvas, figure, data):
+    def __init__(self, x, y, canvas, figure, data, xlabel, ylabel):
         self.canvas = canvas        
         self.ax = figure
+        self.ax.clear()
         self.collection = data
-
+        self.xlabel=xlabel
+        self.ylabel=ylabel
         self.xys = self.collection.get_offsets()
         self.x = x
         self.y = y
-        self.lasso = LassoSelector(self.ax, onselect=self.onselect)
+        self.ax.scatter(x, y, color='blue')
         self.ind = []
+        self.lasso = LassoSelector(self.ax, onselect=self.onselect)
+
 
     def onselect(self, verts):
+        print(self.lasso)
         path = Path(verts)
         self.ind = np.nonzero([path.contains_point(xy) for xy in self.xys])[0]
 
@@ -34,17 +39,29 @@ class Draw_Lasso(object):
         self.canvas.restore_region(background)
         self.ax.clear()
         self.ax.scatter(self.x, self.y, c=colors_array, linewidths=0.3, s=8)
+        self.ax.set_xlabel(self.xlabel)
+        self.ax.set_ylabel(self.ylabel)
         self.ax.draw_artist(self.ax)
         self.canvas.blit(self.ax.bbox)
         # only after mouse has stopped moving
         self.canvas.draw_idle()
 
+    def disconnect(self): ## Disable the lasso
+        self.lasso.disconnect_events()
+        self.canvas.draw_idle()
+        #selector = SelectFromCollection(self.ax, self.collection)
+        #self.lasso = []
+        
+
+#    def show(self):
+#        self.lasso = []
+#        print('istan')
+
 
 ## Return i in self.x and self.y
 
 
-#    def show(self):
-#        plt.show()
+
 
 
 class Draw_Ellipse(object):
@@ -183,7 +200,7 @@ class Draw_Rectangle(object):
         # only after mouse has stopped moving
         self.canvas.draw_idle()
 
-    def draw(self):
+    def show(self):
         plt.show()
 
 #import numpy as np

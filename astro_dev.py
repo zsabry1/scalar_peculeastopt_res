@@ -604,7 +604,7 @@ class PageTwo(PageOne, CTB):
         radiobutton2.grid(row=68, column=19, sticky='w')
 
         ## Set plots
-        button16 = ttk.Button(self, text='Set Plots', command = lambda: self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot, hist_type))
+        button16 = ttk.Button(self, text='Set Plots', command = lambda: self.plot_Main_Hist(canvas_main, main_plot, canvas_hist, hist_plot, hist_type, toolbar))
         button16.grid(row=103, column=4, sticky='w')
 
         ## Histogram labels
@@ -729,12 +729,13 @@ class PageTwo(PageOne, CTB):
             except IndexError:
                 popupmsg("Invalid column number for redshift data")
 
-    def plot_Main_Hist(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type):
+    def plot_Main_Hist(self, canvas_main, main_plot, canvas_hist, hist_plot, hist_type, toolbar):
         main_plot.clear()
         hist_plot.clear()
 
         main_plot.tick_params(axis='x', which='minor', rotation=45)
 
+        ## Histogram Plotting
         if len(self.bounded_pec_VEL) != 0:
             if hist_type.get() == 1:
                 hist_plot.hist(self.bounded_pec_VEL,color='blue',alpha=0.5,range=(min(self.bounded_pec_VEL),max(self.bounded_pec_VEL)),edgecolor='black', linewidth=1)
@@ -767,6 +768,8 @@ class PageTwo(PageOne, CTB):
         canvas_hist.draw()
 
 
+        ## Main scatter plot plotting methods
+
         ## Plotting celestial coordinates
         if self.combo.get() == 'Celestial Coordinates':
             if len(self.bounded_RA) != 0:
@@ -780,29 +783,48 @@ class PageTwo(PageOne, CTB):
                 main_plot.set_ylabel('DEC')
                 canvas_main.draw()
 
+            ## CTB data
+            CTB.x = data.get_offsets()[:,0]
+            CTB.y = data.get_offsets()[:,1]
+            CTB.xlabel='RA'
+            CTB.ylabel='DEC'
+
         if self.combo.get() == 'RA vs. Redshift':
-                if len(self.bounded_RA) != 0:
-                    data = main_plot.scatter(self.bounded_redshift, self.bounded_RA, color='blue', s=8)
-                    main_plot.set_xlabel('Redshift')
-                    main_plot.set_ylabel('RA')
-                    canvas_main.draw()
-                else:
-                    data = main_plot.scatter(self.redshift, self.RA, color='blue', s=8)
-                    main_plot.set_xlabel('Redshift')
-                    main_plot.set_ylabel('RA')
-                    canvas_main.draw()
+            if len(self.bounded_RA) != 0:
+                data = main_plot.scatter(self.bounded_redshift, self.bounded_RA, color='blue', s=8)
+                main_plot.set_xlabel('Redshift')
+                main_plot.set_ylabel('RA')
+                canvas_main.draw()
+            else:
+                data = main_plot.scatter(self.redshift, self.RA, color='blue', s=8)
+                main_plot.set_xlabel('Redshift')
+                main_plot.set_ylabel('RA')
+                canvas_main.draw()
+
+            ## CTB data
+            CTB.x = data.get_offsets()[:,0]
+            CTB.y = data.get_offsets()[:,1]
+            CTB.xlabel='Redshift'
+            CTB.ylabel='RA'
+
 
         if self.combo.get() == 'DEC vs. Redshift':
-                if len(self.bounded_RA) != 0:
-                    data = main_plot.scatter(self.bounded_redshift, self.bounded_DEC, color='blue', s=8)
-                    main_plot.set_xlabel('Redshift')
-                    main_plot.set_ylabel('DEC')
-                    canvas_main.draw()
-                else:
-                    data = main_plot.scatter(self.redshift, self.DEC, color='blue', s=8)
-                    main_plot.set_xlabel('Redshift')
-                    main_plot.set_ylabel('DEC')
-                    canvas_main.draw()
+            if len(self.bounded_RA) != 0:
+                data = main_plot.scatter(self.bounded_redshift, self.bounded_DEC, color='blue', s=8)
+                main_plot.set_xlabel('Redshift')
+                main_plot.set_ylabel('DEC')
+                canvas_main.draw()
+            else:
+                data = main_plot.scatter(self.redshift, self.DEC, color='blue', s=8)
+                main_plot.set_xlabel('Redshift')
+                main_plot.set_ylabel('DEC')
+                canvas_main.draw()
+
+            ## CTB data
+            CTB.x = data.get_offsets()[:,0]
+            CTB.y = data.get_offsets()[:,1]
+            CTB.xlabel='Redshift'
+            CTB.ylabel='DEC'
 
         ## Plotting cluster centric coordinates
         if self.combo.get() == 'Cluster Centric':
@@ -866,20 +888,28 @@ class PageTwo(PageOne, CTB):
 
             self.latitude = new_lat
             self.longitude = new_long
-            
-            data = main_plot.scatter(self.latitude, self.longitude, 'o', s=10)
+
+            data = main_plot.scatter(self.latitude, self.longitude, color='blue', s=8)
             main_plot.set_xlabel('Kpc')
             main_plot.set_ylabel('Kpc')
             canvas_main.draw()
+            
+
+            ## CTB data
+            CTB.x = data.get_offsets()[:,0]
+            CTB.y = data.get_offsets()[:,1]
+            CTB.xlabel='Kpc'
+            CTB.ylabel='Kpc'
 
         ## Setting data for toolbar
-        CTB.x = data.get_offsets()[:,0]
-        CTB.y = data.get_offsets()[:,1]
         CTB.canvas_main = canvas_main
         CTB.main_plot = main_plot
         CTB.canvas_hist = canvas_hist
         CTB.hist_plot = hist_plot
         CTB.collections = data
+
+        ## Cleaning this shit up
+        toolbar.disable_lasso()
  
 
 
